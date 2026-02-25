@@ -994,7 +994,7 @@ The document has moved
                     foo = any(re.search(r'\b' + re.escape(part) + r' \b', b, re.I) for b in BANNED_AGENTS)
                     if foo or part.lower() in BANNED_AGENTS and part.lower() not in OVERRIDE_BANNED_AGENTS:
                         a = part.lower() in OVERRIDE_BANNED_AGENTS
-                        b = (x in part.lower() for x in OVERRIDE_BANNED_AGENTS)
+                        b = any(x in part.lower() for x in OVERRIDE_BANNED_AGENTS)
                         if a or b:
                             self.logger.dbg(
                                 'Peer\'s reverse-IP lookup would be banned because of word "{}" but was whitelisted.'.format(
