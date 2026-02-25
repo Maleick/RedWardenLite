@@ -19,9 +19,9 @@
 
 ### Policy Engine
 
-- [ ] **POL-01**: Redirector policy checks are decomposed into maintainable units without changing externally observable outcomes
-- [ ] **POL-02**: Decision logic and action side effects are separated so policy outcomes are independently testable
-- [ ] **POL-03**: Existing plugin interface behavior remains backward compatible for current deployments
+- [x] **POL-01**: Redirector policy checks are decomposed into maintainable units without changing externally observable outcomes
+- [x] **POL-02**: Decision logic and action side effects are separated so policy outcomes are independently testable
+- [x] **POL-03**: Existing plugin interface behavior remains backward compatible for current deployments
 
 ### Security Hardening
 
@@ -70,9 +70,9 @@
 | NET-01 | Phase 2 | Complete |
 | NET-02 | Phase 2 | Complete |
 | NET-03 | Phase 2 | Complete |
-| POL-01 | Phase 3 | Pending |
-| POL-02 | Phase 3 | Pending |
-| POL-03 | Phase 3 | Pending |
+| POL-01 | Phase 3 | Complete |
+| POL-02 | Phase 3 | Complete |
+| POL-03 | Phase 3 | Complete |
 | SEC-01 | Phase 4 | Pending |
 | SEC-02 | Phase 4 | Pending |
 | SEC-03 | Phase 4 | Pending |
@@ -87,4 +87,4 @@
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after roadmap mapping*
+*Last updated: 2026-02-25 after Phase 3 completion*
