@@ -11,7 +11,7 @@ This roadmap modernizes RedWardenLite in low-risk increments: lock externally vi
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Contract Foundation** - Lock policy behavior with tests, CI gates, and runbook clarity (completed 2026-02-25)
-- [ ] **Phase 2: Async Transport Parity** - Introduce async upstream path with controlled parity checks
+- [x] **Phase 2: Async Transport Parity** - Introduce async upstream path with controlled parity checks (completed 2026-02-25)
 - [ ] **Phase 3: Policy Engine Decomposition** - Split redirector internals into testable maintainable modules
 - [ ] **Phase 4: Runtime Hardening** - Add strict safety defaults and validation for secure operation
 - [ ] **Phase 5: Observability Upgrade** - Deliver structured telemetry for incident response and tuning
@@ -43,9 +43,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Add feature-flagged async fetch path scaffold
-- [ ] 02-02: Build parity comparison harness and baseline report
-- [ ] 02-03: Add rollback/operational guidance for transport switching
+- [x] 02-01: Add feature-flagged async fetch path scaffold
+- [x] 02-02: Build parity comparison harness and baseline report
+- [x] 02-03: Add rollback/operational guidance for transport switching
 
 ### Phase 3: Policy Engine Decomposition
 **Goal**: Reduce coupling by separating policy checks and action logic while preserving behavior.
@@ -95,7 +95,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Contract Foundation | 2/2 | Complete    | 2026-02-25 |
-| 2. Async Transport Parity | 0/3 | Not started | - |
+| 2. Async Transport Parity | 3/3 | Complete   | 2026-02-25 |
 | 3. Policy Engine Decomposition | 0/3 | Not started | - |
 | 4. Runtime Hardening | 0/2 | Not started | - |
 | 5. Observability Upgrade | 0/2 | Not started | - |

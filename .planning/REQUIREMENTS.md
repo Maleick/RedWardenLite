@@ -13,9 +13,9 @@
 
 ### Transport
 
-- [ ] **NET-01**: Async upstream fetch path can be enabled behind an explicit configuration flag
-- [ ] **NET-02**: Async and legacy fetch paths can be compared with parity checks for status, headers, and body behavior
-- [ ] **NET-03**: Legacy transport path remains immediately recoverable via configuration rollback
+- [x] **NET-01**: Async upstream fetch path can be enabled behind an explicit configuration flag
+- [x] **NET-02**: Async and legacy fetch paths can be compared with parity checks for status, headers, and body behavior
+- [x] **NET-03**: Legacy transport path remains immediately recoverable via configuration rollback
 
 ### Policy Engine
 
@@ -67,9 +67,9 @@
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Complete |
-| NET-01 | Phase 2 | Pending |
-| NET-02 | Phase 2 | Pending |
-| NET-03 | Phase 2 | Pending |
+| NET-01 | Phase 2 | Complete |
+| NET-02 | Phase 2 | Complete |
+| NET-03 | Phase 2 | Complete |
 | POL-01 | Phase 3 | Pending |
 | POL-02 | Phase 3 | Pending |
 | POL-03 | Phase 3 | Pending |
