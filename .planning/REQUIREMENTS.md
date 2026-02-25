@@ -31,9 +31,9 @@
 
 ### Observability
 
-- [ ] **OBS-01**: Structured logs emit stable fields for request outcome and reason code
-- [ ] **OBS-02**: Metrics expose request totals, allow/drop counts by reason, upstream failure counts, and latency
-- [ ] **OBS-03**: Operational telemetry supports incident triage without enabling verbose debug logging
+- [x] **OBS-01**: Structured logs emit stable fields for request outcome and reason code
+- [x] **OBS-02**: Metrics expose request totals, allow/drop counts by reason, upstream failure counts, and latency
+- [x] **OBS-03**: Operational telemetry supports incident triage without enabling verbose debug logging
 
 ## v2 Requirements
 
@@ -76,9 +76,9 @@
 | SEC-01 | Phase 4 | Complete |
 | SEC-02 | Phase 4 | Complete |
 | SEC-03 | Phase 4 | Complete |
-| OBS-01 | Phase 5 | Pending |
-| OBS-02 | Phase 5 | Pending |
-| OBS-03 | Phase 5 | Pending |
+| OBS-01 | Phase 5 | Complete |
+| OBS-02 | Phase 5 | Complete |
+| OBS-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 15 total
@@ -87,4 +87,4 @@
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after Phase 4 completion*
+*Last updated: 2026-02-25 after Phase 5 completion*

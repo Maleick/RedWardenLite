@@ -14,7 +14,7 @@ This roadmap modernizes RedWardenLite in low-risk increments: lock externally vi
 - [x] **Phase 2: Async Transport Parity** - Introduce async upstream path with controlled parity checks (completed 2026-02-25)
 - [x] **Phase 3: Policy Engine Decomposition** - Split redirector internals into testable maintainable modules (completed 2026-02-25)
 - [x] **Phase 4: Runtime Hardening** - Add strict safety defaults and validation for secure operation (completed 2026-02-25)
-- [ ] **Phase 5: Observability Upgrade** - Deliver structured telemetry for incident response and tuning
+- [x] **Phase 5: Observability Upgrade** - Deliver structured telemetry for incident response and tuning (completed 2026-02-25)
 
 ## Phase Details
 
@@ -87,8 +87,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Introduce structured event/log schema
-- [ ] 05-02: Add metrics emission and operational dashboard guide
+- [x] 05-01: Introduce structured event/log schema
+- [x] 05-02: Add metrics emission and operational dashboard guide
 
 ## Progress
 
@@ -98,4 +98,4 @@ Plans:
 | 2. Async Transport Parity | 3/3 | Complete   | 2026-02-25 |
 | 3. Policy Engine Decomposition | 3/3 | Complete | 2026-02-25 |
 | 4. Runtime Hardening | 2/2 | Complete | 2026-02-25 |
-| 5. Observability Upgrade | 0/2 | Not started | - |
+| 5. Observability Upgrade | 2/2 | Complete | 2026-02-25 |

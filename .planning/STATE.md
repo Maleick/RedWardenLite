@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-25T21:35:00Z"
+last_updated: "2026-02-25T22:20:00Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Legitimate traffic must pass reliably while non-conformant or suspicious traffic is blocked predictably with auditable policy reasons.
-**Current focus:** Phase 5 — Observability Upgrade
+**Current focus:** Milestone v1.0 complete — ready for next milestone planning
 
 ## Current Position
 
 Phase: 5 of 5 (Observability Upgrade)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 — Phase 5 context captured
+Plan: 2 of 2 in current phase
+Status: Phase 5 complete
+Last activity: 2026-02-25 — Phase 5 observability upgrade verified and closed
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [████████░░] 80%
 | 2 | 3 | - | - |
 | 3 | 3 | - | - |
 | 4 | 2 | - | - |
+| 5 | 2 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: 03-03, 04-01, 04-02
@@ -54,7 +55,7 @@ Progress: [████████░░] 80%
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
+Recent decisions affecting completed milestone:
 
 - Initialization: Use behavior-contract-first modernization approach
 - Initialization: Auto mode config set to quick depth with parallelization
@@ -62,7 +63,7 @@ Recent decisions affecting current work:
 - Phase 2: Added transport mode scaffold, parity harness, and config-toggle rollback runbook
 - Phase 3: Decomposed policy checks by family and separated decision/action with compatibility facade
 - Phase 4: Added compatible/strict runtime profile, strict startup denylist, and actionable validation UX
-- Phase 5: Locked structured events + low-cardinality metrics + contributor-first triage
+- Phase 5: Delivered structured events + low-cardinality metrics + contributor-first triage with CI hard gate
 
 ### Pending Todos
 
@@ -74,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25 15:35
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-observability-upgrade/05-CONTEXT.md
+Last session: 2026-02-25 22:20
+Stopped at: Phase 5 complete
+Resume file: .planning/phases/05-observability-upgrade/05-VERIFICATION.md
