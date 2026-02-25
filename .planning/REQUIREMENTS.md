@@ -1,0 +1,90 @@
+# Requirements: RedWardenLite Evolution
+
+**Defined:** 2026-02-25
+**Core Value:** Legitimate traffic must pass reliably while non-conformant or suspicious traffic is blocked predictably with auditable policy reasons.
+
+## v1 Requirements
+
+### Platform Stability
+
+- [ ] **PLAT-01**: Policy reason-code behavior is covered by automated regression tests for all active drop/allow rule families
+- [ ] **PLAT-02**: CI runs the behavior-lockdown suite on every pull request and push
+- [ ] **PLAT-03**: Operators and contributors have a documented runbook for behavior-lockdown verification
+
+### Transport
+
+- [ ] **NET-01**: Async upstream fetch path can be enabled behind an explicit configuration flag
+- [ ] **NET-02**: Async and legacy fetch paths can be compared with parity checks for status, headers, and body behavior
+- [ ] **NET-03**: Legacy transport path remains immediately recoverable via configuration rollback
+
+### Policy Engine
+
+- [ ] **POL-01**: Redirector policy checks are decomposed into maintainable units without changing externally observable outcomes
+- [ ] **POL-02**: Decision logic and action side effects are separated so policy outcomes are independently testable
+- [ ] **POL-03**: Existing plugin interface behavior remains backward compatible for current deployments
+
+### Security Hardening
+
+- [ ] **SEC-01**: Strict runtime mode enforces upstream TLS verification by default
+- [ ] **SEC-02**: Strict runtime mode prevents unsafe listener/bind settings unless explicitly overridden
+- [ ] **SEC-03**: Configuration validation fails fast on insecure or conflicting security options
+
+### Observability
+
+- [ ] **OBS-01**: Structured logs emit stable fields for request outcome and reason code
+- [ ] **OBS-02**: Metrics expose request totals, allow/drop counts by reason, upstream failure counts, and latency
+- [ ] **OBS-03**: Operational telemetry supports incident triage without enabling verbose debug logging
+
+## v2 Requirements
+
+### Configuration UX
+
+- **CFG-01**: Provide opinionated config profiles (safe-default, lab-debug, high-throughput)
+- **CFG-02**: Add guided migration hints when configuration schema evolves
+
+### Delivery Ergonomics
+
+- **DPLY-01**: Publish container and service templates for standard deployment patterns
+- **DPLY-02**: Add packaging guidance for environment-specific operations
+
+### Advanced Extensibility
+
+- **EXT-01**: Formalize plugin capability/version compatibility metadata
+- **EXT-02**: Add stronger plugin isolation controls
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Full language/runtime rewrite | High migration risk relative to near-term value |
+| New control-plane web UI | Not required to deliver core proxy modernization goals |
+| Cross-region distributed state control | Operationally heavy and not required for this milestone |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PLAT-01 | TBD | Pending |
+| PLAT-02 | TBD | Pending |
+| PLAT-03 | TBD | Pending |
+| NET-01 | TBD | Pending |
+| NET-02 | TBD | Pending |
+| NET-03 | TBD | Pending |
+| POL-01 | TBD | Pending |
+| POL-02 | TBD | Pending |
+| POL-03 | TBD | Pending |
+| SEC-01 | TBD | Pending |
+| SEC-02 | TBD | Pending |
+| SEC-03 | TBD | Pending |
+| OBS-01 | TBD | Pending |
+| OBS-02 | TBD | Pending |
+| OBS-03 | TBD | Pending |
+
+**Coverage:**
+- v1 requirements: 15 total
+- Mapped to phases: 0
+- Unmapped: 15 ⚠️
+
+---
+*Requirements defined: 2026-02-25*
+*Last updated: 2026-02-25 after initial definition*
