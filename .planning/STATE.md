@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-25T21:08:00Z"
+last_updated: "2026-02-25T21:35:00Z"
 progress:
   total_phases: 5
   completed_phases: 4
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 Phase: 5 of 5 (Observability Upgrade)
 Plan: 0 of 2 in current phase
-Status: Ready to discuss
-Last activity: 2026-02-25 — Phase 4 runtime hardening completed and verified
+Status: Ready to plan
+Last activity: 2026-02-25 — Phase 5 context captured
 
 Progress: [████████░░] 80%
 
@@ -62,6 +62,7 @@ Recent decisions affecting current work:
 - Phase 2: Added transport mode scaffold, parity harness, and config-toggle rollback runbook
 - Phase 3: Decomposed policy checks by family and separated decision/action with compatibility facade
 - Phase 4: Added compatible/strict runtime profile, strict startup denylist, and actionable validation UX
+- Phase 5: Locked structured events + low-cardinality metrics + contributor-first triage
 
 ### Pending Todos
 
@@ -73,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25 15:08
-Stopped at: Phase 4 completed and verified
-Resume file: .planning/ROADMAP.md
+Last session: 2026-02-25 15:35
+Stopped at: Phase 5 context gathered
+Resume file: .planning/phases/05-observability-upgrade/05-CONTEXT.md
