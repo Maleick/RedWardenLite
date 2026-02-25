@@ -25,9 +25,9 @@
 
 ### Security Hardening
 
-- [ ] **SEC-01**: Strict runtime mode enforces upstream TLS verification by default
-- [ ] **SEC-02**: Strict runtime mode prevents unsafe listener/bind settings unless explicitly overridden
-- [ ] **SEC-03**: Configuration validation fails fast on insecure or conflicting security options
+- [x] **SEC-01**: Strict runtime mode enforces upstream TLS verification by default
+- [x] **SEC-02**: Strict runtime mode prevents unsafe listener/bind settings unless explicitly overridden
+- [x] **SEC-03**: Configuration validation fails fast on insecure or conflicting security options
 
 ### Observability
 
@@ -73,9 +73,9 @@
 | POL-01 | Phase 3 | Complete |
 | POL-02 | Phase 3 | Complete |
 | POL-03 | Phase 3 | Complete |
-| SEC-01 | Phase 4 | Pending |
-| SEC-02 | Phase 4 | Pending |
-| SEC-03 | Phase 4 | Pending |
+| SEC-01 | Phase 4 | Complete |
+| SEC-02 | Phase 4 | Complete |
+| SEC-03 | Phase 4 | Complete |
 | OBS-01 | Phase 5 | Pending |
 | OBS-02 | Phase 5 | Pending |
 | OBS-03 | Phase 5 | Pending |
@@ -87,4 +87,4 @@
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after Phase 3 completion*
+*Last updated: 2026-02-25 after Phase 4 completion*
