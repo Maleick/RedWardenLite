@@ -84,6 +84,37 @@ ssl_cakey: certs/privkey.key
 drop_invalid_http_requests: True
 
 
+#
+# ===================================
+# Async transport parity controls
+# ===================================
+#
+
+# Upstream transport mode:
+#   legacy - existing synchronous path (default)
+#   async  - asynchronous path scaffold
+#   auto   - runtime chooses path dynamically (only when explicitly set)
+transport_mode: legacy
+
+# If async request fails, fallback that request to legacy path.
+transport_async_fallback_to_legacy_on_error: true
+
+# Enable shadow parity comparison between primary and alternate transport.
+transport_parity_enabled: false
+
+# Extra headers to ignore in parity comparison.
+transport_parity_header_ignore: []
+
+# Static allowlist file containing regex patterns for accepted mismatch IDs.
+transport_parity_allowlist_file: data/transport_parity_allowlist.json
+
+# Directory for parity artifacts.
+transport_parity_artifact_dir: artifacts/parity
+
+# Mark non-allowlisted mismatches as CI hard-fail candidates.
+transport_parity_ci_hard_fail: true
+
+
 
 #
 # (Required) Address to which legitimate inbound traffic (traffic that passes the defined rules) should be redirected.
@@ -443,4 +474,3 @@ expected_uri:
 #
 remove_these_response_headers:
   - Content-Encoding
-

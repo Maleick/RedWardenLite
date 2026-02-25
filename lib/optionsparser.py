@@ -68,6 +68,36 @@ def parse_options(opts, version):
     parser.add_argument("-u", "--proxy-url", dest='proxy_self_url', metavar='URL',
                         help="Specifies proxy's self url. Default: " + opts['proxy_self_url'] + ".",
                         type=str, default=opts['proxy_self_url'])
+    parser.add_argument("--transport-mode", dest="transport_mode", metavar="MODE",
+                        choices=("legacy", "async", "auto"),
+                        help="Select upstream transport path. Default: {}.".format(opts['transport_mode']),
+                        default=opts['transport_mode'])
+    parser.add_argument("--transport-async-fallback", dest="transport_async_fallback_to_legacy_on_error",
+                        help="When async mode fails for a request, fallback to legacy transport.",
+                        action="store_true")
+    parser.add_argument("--no-transport-async-fallback", dest="transport_async_fallback_to_legacy_on_error",
+                        help="Disable legacy fallback when async request fails.",
+                        action="store_false")
+    parser.set_defaults(
+        transport_async_fallback_to_legacy_on_error=opts.get('transport_async_fallback_to_legacy_on_error', True)
+    )
+    parser.add_argument("--transport-parity-enabled", dest="transport_parity_enabled",
+                        help="Enable shadow parity checks between primary and alternate transport.",
+                        action="store_true", default=opts.get('transport_parity_enabled', False))
+    parser.add_argument("--transport-parity-header-ignore", dest="transport_parity_header_ignore",
+                        help="Header to ignore in parity comparison (repeatable).", action="append",
+                        default=opts.get('transport_parity_header_ignore', []))
+    parser.add_argument("--transport-parity-allowlist-file", dest="transport_parity_allowlist_file",
+                        metavar="PATH",
+                        help="Path to static parity allowlist file.",
+                        default=opts.get('transport_parity_allowlist_file', 'data/transport_parity_allowlist.json'))
+    parser.add_argument("--transport-parity-artifact-dir", dest="transport_parity_artifact_dir",
+                        metavar="DIR",
+                        help="Directory for parity JSON/Markdown artifacts.",
+                        default=opts.get('transport_parity_artifact_dir', 'artifacts/parity'))
+    parser.add_argument("--transport-parity-ci-hard-fail", dest="transport_parity_ci_hard_fail",
+                        help="Mark parity mismatches as CI hard-fail candidates.",
+                        action="store_true", default=opts.get('transport_parity_ci_hard_fail', True))
 
     # SSL Interception
     sslgroup = parser.add_argument_group("SSL Interception setup")
@@ -195,13 +225,17 @@ def parseParametersFromConfigFile(_params):
         'ssl_certkey',
         'ssl_cakey',
         'ssl_cacert',
+        'transport_parity_allowlist_file',
+        'transport_parity_artifact_dir',
     )
 
     parametersWithPathThatMayNotExist = (
         'log',
         'output',
         'access_log',
-        'ssl_certdir'
+        'ssl_certdir',
+        'transport_parity_allowlist_file',
+        'transport_parity_artifact_dir',
     )
 
     translateParamNames = {

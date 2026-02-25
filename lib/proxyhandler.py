@@ -5,6 +5,7 @@
 import time
 import html
 import sys, os
+import asyncio
 import brotli
 import base64
 import string
@@ -25,6 +26,8 @@ from lib.proxylogger import ProxyLogger
 from lib.pluginsloader import PluginsLoader
 from lib.sslintercept import SSLInterception
 from lib.utils import *
+from lib.transport_runtime import as_bool, fetch_with_fallback, normalize_transport_mode, select_primary_transport, shadow_transport
+from lib.transport_parity import apply_allowlist, compare_transport_results, load_allowlist_patterns, write_parity_artifacts
 
 from tornado.httpclient import AsyncHTTPClient
 import tornado.web
@@ -266,7 +269,188 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self._send_error(500)
         return
 
-    def my_handle_request(self, *args, **kwargs):
+    def _collect_transport_config(self):
+        header_ignore = self.options.get('transport_parity_header_ignore', [])
+        if isinstance(header_ignore, str):
+            header_ignore = [x.strip() for x in header_ignore.split(',') if x.strip()]
+        elif not isinstance(header_ignore, (list, tuple)):
+            header_ignore = []
+
+        return {
+            'mode': normalize_transport_mode(self.options.get('transport_mode', 'legacy')),
+            'async_fallback': as_bool(
+                self.options.get('transport_async_fallback_to_legacy_on_error', True), True
+            ),
+            'parity_enabled': as_bool(self.options.get('transport_parity_enabled', False), False),
+            'parity_header_ignore': list(header_ignore),
+            'parity_allowlist_file': self.options.get(
+                'transport_parity_allowlist_file', 'data/transport_parity_allowlist.json'
+            ),
+            'parity_artifact_dir': self.options.get('transport_parity_artifact_dir', 'artifacts/parity'),
+            'parity_ci_hard_fail': as_bool(self.options.get('transport_parity_ci_hard_fail', True), True),
+        }
+
+    def _perform_requests_fetch(self, method, fetchurl, req_body, req_headers, timeout, ignore_decompression):
+        myreq = requests.request(
+            method=method,
+            url=fetchurl,
+            data=req_body,
+            headers=req_headers,
+            timeout=timeout,
+            allow_redirects=False,
+            stream=ignore_decompression,
+            verify=False
+        )
+
+        if ignore_decompression:
+            body = myreq.raw.read()
+        else:
+            body = myreq.content
+
+        result = {
+            'status': myreq.status_code,
+            'reason': myreq.reason,
+            'headers': dict(myreq.headers),
+            'body': body,
+        }
+
+        myreq.close()
+        return result
+
+    async def _fetch_upstream(self, transport, method, fetchurl, req_body, req_headers, timeout, ignore_decompression):
+        if normalize_transport_mode(transport) == 'async':
+            return await asyncio.to_thread(
+                self._perform_requests_fetch,
+                method,
+                fetchurl,
+                req_body,
+                req_headers,
+                timeout,
+                ignore_decompression,
+            )
+
+        return self._perform_requests_fetch(
+            method,
+            fetchurl,
+            req_body,
+            req_headers,
+            timeout,
+            ignore_decompression,
+        )
+
+    async def _fetch_primary_transport(
+            self,
+            primary_transport,
+            fetch_context,
+            fallback_enabled):
+        async def _fetcher(mode):
+            return await self._fetch_upstream(
+                mode,
+                fetch_context['method'],
+                fetch_context['fetchurl'],
+                fetch_context['req_body'],
+                fetch_context['headers'],
+                fetch_context['timeout'],
+                fetch_context['ignore_decompression'],
+            )
+
+        return await fetch_with_fallback(
+            primary_transport,
+            _fetcher,
+            fallback_enabled=fallback_enabled,
+            log_failure=lambda exc: self.logger.err(
+                '[TRANSPORT async-fallback] {}'.format(
+                    json.dumps(
+                        {
+                            'reason': 'async_fetch_error',
+                            'error': str(exc),
+                            'path': fetch_context['path'],
+                            'method': fetch_context['method'],
+                        },
+                        sort_keys=True,
+                    )
+                )
+            ),
+        )
+
+    async def _run_shadow_parity(self, primary_transport, fetch_context, primary_result, transport_cfg):
+        if not transport_cfg['parity_enabled']:
+            return
+
+        shadow = shadow_transport(primary_transport)
+        if shadow == primary_transport:
+            return
+
+        try:
+            shadow_result = await self._fetch_upstream(
+                shadow,
+                fetch_context['method'],
+                fetch_context['fetchurl'],
+                fetch_context['req_body'],
+                fetch_context['headers'],
+                fetch_context['timeout'],
+                fetch_context['ignore_decompression'],
+            )
+        except Exception as exc:
+            self.logger.err(
+                '[TRANSPORT parity-shadow-error] {}'.format(
+                    json.dumps(
+                        {
+                            'reason': 'shadow_fetch_error',
+                            'error': str(exc),
+                            'path': fetch_context['path'],
+                            'method': fetch_context['method'],
+                            'primary_transport': primary_transport,
+                            'shadow_transport': shadow,
+                        },
+                        sort_keys=True,
+                    )
+                )
+            )
+            return
+
+        compare = compare_transport_results(
+            primary_result,
+            shadow_result,
+            header_ignore=transport_cfg['parity_header_ignore'],
+        )
+
+        patterns = load_allowlist_patterns(transport_cfg['parity_allowlist_file'])
+        allowlisted, unresolved = apply_allowlist(compare['mismatches'], patterns)
+
+        event = {
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'method': fetch_context['method'],
+            'path': fetch_context['path'],
+            'primary_transport': primary_transport,
+            'shadow_transport': shadow,
+            'allowlisted_count': len(allowlisted),
+            'unresolved_count': len(unresolved),
+            'allowlisted_mismatches': allowlisted,
+            'unresolved_mismatches': unresolved,
+        }
+
+        artifact_paths = write_parity_artifacts(transport_cfg['parity_artifact_dir'], event)
+        if unresolved:
+            self.logger.err(
+                '[TRANSPORT parity-mismatch] {}'.format(
+                    json.dumps(
+                        {
+                            'path': fetch_context['path'],
+                            'method': fetch_context['method'],
+                            'primary_transport': primary_transport,
+                            'shadow_transport': shadow,
+                            'unresolved_count': len(unresolved),
+                            'allowlisted_count': len(allowlisted),
+                            'artifacts': artifact_paths,
+                            'ci_hard_fail': transport_cfg['parity_ci_hard_fail'],
+                        },
+                        sort_keys=True,
+                    )
+                )
+            )
+
+    async def my_handle_request(self, *args, **kwargs):
         # http://httpd.apache.org/docs/current/logs.html#combined
         # [day/month/year:hour:minute:second zone]
         # day = 2*digit
@@ -282,7 +466,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             if self.request.uri.startswith('//'):
                 self.request.uri = self.request.uri[1:]
 
-        self._internal_my_handle_request(*args, **kwargs)
+        await self._internal_my_handle_request(*args, **kwargs)
 
         remote_host = self.request.client_address
         if (type(self.request.client_address) == list or type(self.request.client_address) == tuple) and len(
@@ -383,7 +567,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         if not self.request.suppress_log_entry:
             print(line)
 
-    def _internal_my_handle_request(self, *args, **kwargs):
+    async def _internal_my_handle_request(self, *args, **kwargs):
         handler = self._my_handle_request
         if self.request.method.lower() == 'connect':
             handler = self.connectMethod
@@ -417,7 +601,10 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
 
             self.request.uri = newpath
 
-        output = handler()
+        if asyncio.iscoroutinefunction(handler):
+            output = await handler()
+        else:
+            output = handler()
 
         self.request.method = self.request.method
         self.request.host = self.request.headers['Host']
@@ -452,7 +639,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         if self.request.connection.no_keep_alive:
             self.request.connection.stream.close()
 
-    def _my_handle_request(self):
+    async def _my_handle_request(self):
         if self.request.uri == self.options['proxy_self_url']:
             self.logger.dbg('Sending CA certificate.')
             self.send_cacert()
@@ -616,9 +803,14 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 self.response_version = origreq.protocol_version
 
                 if req != None:
-                    self.status = req.status_code
-                    self.headers = req.headers.copy()
-                    self.reason = req.reason
+                    if isinstance(req, dict):
+                        self.status = int(req.get('status', 0))
+                        self.headers = dict(req.get('headers', {}))
+                        self.reason = str(req.get('reason', ''))
+                    else:
+                        self.status = req.status_code
+                        self.headers = req.headers.copy()
+                        self.reason = req.reason
                 else:
                     if hasattr(origreq, 'status'):
                         self.status = origreq.status
@@ -713,37 +905,40 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     self.request.method, fetchurl, req_body.decode(errors='ignore')[:30].strip()
                 ))
 
-                myreq = None
-                try:
-                    myreq = requests.request(
-                        method=self.request.method,
-                        url=fetchurl,
-                        data=req_body,
-                        headers=new_req_headers,
-                        timeout=self.options['timeout'],
-                        allow_redirects=False,
-                        stream=ignore_response_decompression_errors,
-                        verify=False
-                    )
+                transport_cfg = self._collect_transport_config()
+                content_length = int(self.request.headers.get('Content-Length', 0) or 0)
+                primary_transport = select_primary_transport(
+                    transport_cfg['mode'], self.request.method, content_length
+                )
 
-                except Exception as e:
-                    self.logger.err(f'COULD NOT FETCH RESPONSE FROM REMOTE AGENT: {e}')
+                fetch_context = {
+                    'method': self.request.method,
+                    'path': path,
+                    'fetchurl': fetchurl,
+                    'req_body': req_body,
+                    'headers': new_req_headers,
+                    'timeout': self.options['timeout'],
+                    'ignore_decompression': ignore_response_decompression_errors,
+                }
 
-                    if self.options['debug']:
-                        raise
+                primary_fetch = await self._fetch_primary_transport(
+                    primary_transport,
+                    fetch_context,
+                    fallback_enabled=transport_cfg['async_fallback'],
+                )
+                primary_result = primary_fetch['result']
+                transport_used = primary_fetch['transport_used']
 
-                res = MyResponse(myreq, self)
+                res = MyResponse(primary_result, self)
                 self.response_headers = res.headers
                 res_msg_hdrs = res.msg.copy()
 
                 if len(res.msg) == 0 and len(res.headers) > 0:
                     res_msg_hdrs = res.headers.copy()
 
-                res_body = ""
-                if ignore_response_decompression_errors:
-                    res_body = myreq.raw.read()
-                else:
-                    res_body = myreq.content
+                res_body = primary_result.get('body', b'')
+                if type(res_body) == str:
+                    res_body = str.encode(res_body)
 
                 self.logger.dbg("Response from reverse-proxy fetch came at {} bytes.".format(len(res_body)))
 
@@ -751,9 +946,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     res.headers['Content-Length'] = str(len(res_body))
                     self.response_length = len(res_body)
 
-                myreq.close()
-
-                if type(res_body) == str: res_body = str.encode(res_body)
+                await self._run_shadow_parity(transport_used, fetch_context, primary_result, transport_cfg)
 
             except requests.exceptions.ConnectionError as e:
                 self.logger.err(
@@ -1199,31 +1392,31 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self.print_info(req, req_body, res, res_body)
 
     async def get(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def post(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def head(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def options(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def put(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def delete(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def patch(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def propfind(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
     async def connect(self, *args, **kwargs):
-        self.my_handle_request()
+        await self.my_handle_request()
 
 
 def init(opts, VERSION):
