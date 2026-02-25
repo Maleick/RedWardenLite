@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 from plugins.IProxyPlugin import *
 from sqlitedict import SqliteDict
 from lib.ipLookupHelper import IPLookupHelper, IPGeolocationDeterminant
+from plugins.policy.actions import ActionExecutor
+from plugins.policy.engine import PolicyEngine
 from datetime import datetime
 import fnmatch
 
@@ -94,6 +96,9 @@ class ProxyPlugin(IProxyPlugin):
         with SqliteDict(ProxyPlugin.DynamicWhitelistFile, autocommit=True) as mydict:
             mydict['whitelisted_ips'] = []
             mydict['peers'] = {}
+
+        self.policy_engine = PolicyEngine(self)
+        self.action_executor = ActionExecutor(self)
 
     @staticmethod
     def get_name():
@@ -1282,7 +1287,12 @@ The document has moved
                 if not match:
                     drop = True
                 elif k.lower() == 'host' and match:
-                    req.headers[proxy2_metadata_headers['override_host_header']] = v
+                    if returnJson:
+                        metadata = respJson.get('metadata', {})
+                        metadata['override_host_header'] = v
+                        respJson['metadata'] = metadata
+                    else:
+                        req.headers[proxy2_metadata_headers['override_host_header']] = v
 
                 if drop:
                     msg = '[DROP, {}, reason:6, {}] HTTP request did not contain expected header value: "{}: {}"'.format(
@@ -1345,71 +1355,30 @@ The document has moved
         return None
 
     def _client_request_inspect(self, peerIP, ts, req, req_body, res, res_body, parsedJson):
-        respJson = {}
         returnJson = (parsedJson is not None and res is not None)
+        decision = self.policy_engine.evaluate(peerIP, ts, req, req_body)
+        matched_status = bool(decision.metadata.get('matched_status', False))
 
-        respJson['drop_type'] = self.proxyOptions['drop_action']
-        respJson['action_url'] = self.proxyOptions['action_url']
+        if returnJson:
+            metadata = decision.metadata.copy()
+            override_host = metadata.get('override_host_header')
+            if override_host:
+                req.headers[proxy2_metadata_headers['override_host_header']] = override_host
 
-        # Option: whitelisted_ip_addresses
-        whitelist_ip_check = self._whitelist_ip_check(peerIP, ts, req, returnJson, respJson)
-        if whitelist_ip_check is not None:
-            return whitelist_ip_check
+            respJson = {
+                'drop_type': metadata.get('drop_type', self.proxyOptions['drop_action']),
+                'action_url': metadata.get('action_url', self.proxyOptions['action_url']),
+                'action': decision.action,
+                'reason': decision.reason,
+                'message': decision.message,
+                'ipgeo': decision.ipgeo,
+            }
+            if metadata:
+                respJson['metadata'] = metadata
 
-        # Policy check: allow_dynamic_peer_whitelisting
-        dynamic_peer_whitelisting_check = self._dynamic_peer_whitelisting_check(peerIP, ts, req, returnJson, respJson)
-        if dynamic_peer_whitelisting_check is not None:
-            return dynamic_peer_whitelisting_check
+            return matched_status, respJson
 
-        # Option: ban_blacklisted_ip_addresses
-        ban_blacklisted_ip_addresses_check = self._ban_blacklisted_ip_addresses_check(peerIP, ts, req, returnJson,
-                                                                                      respJson)
-        if ban_blacklisted_ip_addresses_check is not None:
-            return ban_blacklisted_ip_addresses_check
-
-        # Policy: drop_dangerous_ip_reverse_lookup
-        drop_dangerous_ip_reverse_lookup = self._drop_dangerous_ip_reverse_lookup_check(peerIP, ts, req, returnJson,
-                                                                                        respJson)
-        if drop_dangerous_ip_reverse_lookup is not None:
-            return drop_dangerous_ip_reverse_lookup
-
-        # Policy: drop_http_banned_header_names, drop_http_banned_header_value
-        drop_http_banned_header_names_check = self._drop_http_banned_header_names_check(peerIP, ts, req, returnJson,
-                                                                                        respJson)
-        if drop_http_banned_header_names_check is not None:
-            return drop_http_banned_header_names_check
-
-        # Policy: drop_request_without_expected_header_value
-        drop_request_without_expected_header_check = self._drop_request_without_expected_header_check(peerIP, ts, req,
-                                                                                                      returnJson,
-                                                                                                      respJson)
-        if drop_request_without_expected_header_check is not None:
-            return drop_request_without_expected_header_check
-
-        # Validations: Expected headers values
-        drop_request_without_expected_header_value_check = self._drop_request_without_expected_header_value_check(
-            peerIP, ts, req, returnJson, respJson)
-        if drop_request_without_expected_header_value_check is not None:
-            return drop_request_without_expected_header_value_check
-
-        # Validations: Expected HTTP Methods
-        drop_request_without_expected_http_method_check = self._drop_request_without_expected_http_method_check(peerIP,
-                                                                                                                ts, req,
-                                                                                                                returnJson,
-                                                                                                                respJson)
-        if drop_request_without_expected_http_method_check is not None:
-            return drop_request_without_expected_http_method_check
-
-        # Validations: Expected URI
-        drop_request_without_expected_uri_check = self._drop_request_without_expected_uri_check(peerIP, ts, req,
-                                                                                                returnJson, respJson)
-        if drop_request_without_expected_uri_check is not None:
-            return drop_request_without_expected_uri_check
-
-        # Option: verify_peer_ip_details
-        verify_peer_ip_details_check = self._verify_peer_ip_details_check(peerIP, ts, req, returnJson, respJson)
-        if verify_peer_ip_details_check is not None:
-            return verify_peer_ip_details_check
+        return self.action_executor.execute(decision, peerIP, ts, req)
 
     def drop_check(self, req, req_body):
         peerIP = ProxyPlugin.get_peer_ip(req)
