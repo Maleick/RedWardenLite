@@ -115,6 +115,30 @@ transport_parity_artifact_dir: artifacts/parity
 transport_parity_ci_hard_fail: true
 
 
+#
+# ===================================
+# Runtime hardening controls
+# ===================================
+#
+
+# Runtime hardening profile:
+#   compatible - keep legacy-compatible startup behavior (default)
+#   strict     - enforce secure startup hardening checks
+runtime_profile: compatible
+
+# Allow strict mode to continue startup with unsafe combinations.
+# Requires non-empty runtime_hardening_unsafe_ack when true.
+runtime_hardening_allow_unsafe: false
+
+# Explicit acknowledgement string for unsafe strict-mode override.
+runtime_hardening_unsafe_ack: ""
+
+# Startup validation output mode:
+#   human - grouped actionable summary (default)
+#   json  - machine-readable structured output
+runtime_hardening_validation_output: human
+
+
 
 #
 # (Required) Address to which legitimate inbound traffic (traffic that passes the defined rules) should be redirected.

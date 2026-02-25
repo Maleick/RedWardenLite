@@ -99,6 +99,29 @@ def parse_options(opts, version):
                         help="Mark parity mismatches as CI hard-fail candidates.",
                         action="store_true", default=opts.get('transport_parity_ci_hard_fail', True))
 
+    parser.add_argument("--runtime-profile", dest="runtime_profile", metavar="PROFILE",
+                        choices=("compatible", "strict"),
+                        help="Runtime hardening profile. Default: {}.".format(opts.get('runtime_profile', 'compatible')),
+                        default=opts.get('runtime_profile', 'compatible'))
+    parser.add_argument("--runtime-hardening-allow-unsafe", dest="runtime_hardening_allow_unsafe",
+                        help="Allow strict-mode startup with unsafe runtime combinations (requires acknowledgement).",
+                        action="store_true")
+    parser.add_argument("--no-runtime-hardening-allow-unsafe", dest="runtime_hardening_allow_unsafe",
+                        help="Disable strict-mode unsafe override.",
+                        action="store_false")
+    parser.set_defaults(
+        runtime_hardening_allow_unsafe=opts.get('runtime_hardening_allow_unsafe', False)
+    )
+    parser.add_argument("--runtime-hardening-unsafe-ack", dest="runtime_hardening_unsafe_ack", metavar="TEXT",
+                        help="Explicit acknowledgement for unsafe strict-mode override.",
+                        default=opts.get('runtime_hardening_unsafe_ack', ''))
+    parser.add_argument("--runtime-hardening-validation-output", dest="runtime_hardening_validation_output",
+                        metavar="MODE", choices=("human", "json"),
+                        help="Startup hardening validation output mode. Default: {}.".format(
+                            opts.get('runtime_hardening_validation_output', 'human')
+                        ),
+                        default=opts.get('runtime_hardening_validation_output', 'human'))
+
     # SSL Interception
     sslgroup = parser.add_argument_group("SSL Interception setup")
     sslgroup.add_argument("-S", "--no-ssl-mitm", dest='no_ssl',

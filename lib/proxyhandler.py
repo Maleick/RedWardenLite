@@ -28,6 +28,11 @@ from lib.sslintercept import SSLInterception
 from lib.utils import *
 from lib.transport_runtime import as_bool, fetch_with_fallback, normalize_transport_mode, select_primary_transport, shadow_transport
 from lib.transport_parity import apply_allowlist, compare_transport_results, load_allowlist_patterns, write_parity_artifacts
+from lib.runtime_hardening import (
+    apply_runtime_hardening_effective,
+    evaluate_runtime_hardening,
+    format_runtime_hardening_report,
+)
 
 from tornado.httpclient import AsyncHTTPClient
 import tornado.web
@@ -288,9 +293,18 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             ),
             'parity_artifact_dir': self.options.get('transport_parity_artifact_dir', 'artifacts/parity'),
             'parity_ci_hard_fail': as_bool(self.options.get('transport_parity_ci_hard_fail', True), True),
+            'upstream_tls_verify': as_bool(self.options.get('runtime_tls_verify_upstream', False), False),
         }
 
-    def _perform_requests_fetch(self, method, fetchurl, req_body, req_headers, timeout, ignore_decompression):
+    def _perform_requests_fetch(
+            self,
+            method,
+            fetchurl,
+            req_body,
+            req_headers,
+            timeout,
+            ignore_decompression,
+            verify_upstream_tls):
         myreq = requests.request(
             method=method,
             url=fetchurl,
@@ -299,7 +313,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             timeout=timeout,
             allow_redirects=False,
             stream=ignore_decompression,
-            verify=False
+            verify=verify_upstream_tls
         )
 
         if ignore_decompression:
@@ -317,7 +331,16 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         myreq.close()
         return result
 
-    async def _fetch_upstream(self, transport, method, fetchurl, req_body, req_headers, timeout, ignore_decompression):
+    async def _fetch_upstream(
+            self,
+            transport,
+            method,
+            fetchurl,
+            req_body,
+            req_headers,
+            timeout,
+            ignore_decompression,
+            verify_upstream_tls):
         if normalize_transport_mode(transport) == 'async':
             return await asyncio.to_thread(
                 self._perform_requests_fetch,
@@ -327,6 +350,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 req_headers,
                 timeout,
                 ignore_decompression,
+                verify_upstream_tls,
             )
 
         return self._perform_requests_fetch(
@@ -336,6 +360,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             req_headers,
             timeout,
             ignore_decompression,
+            verify_upstream_tls,
         )
 
     async def _fetch_primary_transport(
@@ -352,6 +377,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 fetch_context['headers'],
                 fetch_context['timeout'],
                 fetch_context['ignore_decompression'],
+                fetch_context['verify_upstream_tls'],
             )
 
         return await fetch_with_fallback(
@@ -919,6 +945,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     'headers': new_req_headers,
                     'timeout': self.options['timeout'],
                     'ignore_decompression': ignore_response_decompression_errors,
+                    'verify_upstream_tls': transport_cfg['upstream_tls_verify'],
                 }
 
                 primary_fetch = await self._fetch_primary_transport(
@@ -1429,6 +1456,32 @@ def init(opts, VERSION):
 
     lib.optionsparser.parse_options(options, VERSION)
     logger = ProxyLogger(options)
+
+    hardening_report = evaluate_runtime_hardening(options)
+    apply_runtime_hardening_effective(options, hardening_report)
+    logger.options.update(options)
+
+    for warning in hardening_report.get('warnings', []):
+        logger.info(
+            "[RUNTIME HARDENING][{}] {} | path={} | safe_example={}".format(
+                warning.get('id', 'warning'),
+                warning.get('reason', ''),
+                warning.get('path', ''),
+                warning.get('safe_example', ''),
+            ),
+            forced=True,
+            color='yellow',
+        )
+
+    if hardening_report.get('fail', False):
+        rendered = format_runtime_hardening_report(hardening_report)
+        if hardening_report.get('output_mode') == 'json':
+            logger.err(rendered)
+        else:
+            for line in rendered.splitlines():
+                logger.err(line)
+        raise SystemExit(hardening_report.get('exit_code', 2))
+
     pluginsloaded = PluginsLoader(logger, options)
     sslintercept = SSLInterception(logger, options)
 
