@@ -10,7 +10,7 @@ This roadmap modernizes RedWardenLite in low-risk increments: lock externally vi
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Contract Foundation** - Lock policy behavior with tests, CI gates, and runbook clarity
+- [x] **Phase 1: Contract Foundation** - Lock policy behavior with tests, CI gates, and runbook clarity (completed 2026-02-25)
 - [ ] **Phase 2: Async Transport Parity** - Introduce async upstream path with controlled parity checks
 - [ ] **Phase 3: Policy Engine Decomposition** - Split redirector internals into testable maintainable modules
 - [ ] **Phase 4: Runtime Hardening** - Add strict safety defaults and validation for secure operation
@@ -29,8 +29,8 @@ This roadmap modernizes RedWardenLite in low-risk increments: lock externally vi
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Expand and stabilize policy reason-code contract matrix
-- [ ] 01-02: CI enforcement and test runbook integration
+- [x] 01-01: Expand and stabilize policy reason-code contract matrix
+- [x] 01-02: CI enforcement and test runbook integration
 
 ### Phase 2: Async Transport Parity
 **Goal**: Introduce an async fetch path without changing external proxy behavior.
@@ -94,7 +94,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Contract Foundation | 0/2 | Not started | - |
+| 1. Contract Foundation | 2/2 | Complete    | 2026-02-25 |
 | 2. Async Transport Parity | 0/3 | Not started | - |
 | 3. Policy Engine Decomposition | 0/3 | Not started | - |
 | 4. Runtime Hardening | 0/2 | Not started | - |

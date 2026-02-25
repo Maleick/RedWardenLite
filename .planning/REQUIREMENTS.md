@@ -7,9 +7,9 @@
 
 ### Platform Stability
 
-- [ ] **PLAT-01**: Policy reason-code behavior is covered by automated regression tests for all active drop/allow rule families
-- [ ] **PLAT-02**: CI runs the behavior-lockdown suite on every pull request and push
-- [ ] **PLAT-03**: Operators and contributors have a documented runbook for behavior-lockdown verification
+- [x] **PLAT-01**: Policy reason-code behavior is covered by automated regression tests for all active drop/allow rule families
+- [x] **PLAT-02**: CI runs the behavior-lockdown suite on every pull request and push
+- [x] **PLAT-03**: Operators and contributors have a documented runbook for behavior-lockdown verification
 
 ### Transport
 
@@ -64,9 +64,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| PLAT-03 | Phase 1 | Complete |
 | NET-01 | Phase 2 | Pending |
 | NET-02 | Phase 2 | Pending |
 | NET-03 | Phase 2 | Pending |
