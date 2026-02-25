@@ -139,6 +139,32 @@ runtime_hardening_unsafe_ack: ""
 runtime_hardening_validation_output: human
 
 
+#
+# ===================================
+# Observability controls
+# ===================================
+#
+
+# Enable structured request summary events.
+observability_events_enabled: true
+
+# JSONL sink for structured events (one completed request per line).
+observability_events_file: artifacts/observability/events.jsonl
+
+# Enable in-process metrics collection and exposition endpoint.
+observability_metrics_enabled: true
+
+# Metrics endpoint path (Prometheus text exposition).
+observability_metrics_path: /metrics
+
+# Metrics format (fixed to prometheus in this phase).
+observability_metrics_format: prometheus
+
+# Include query string in structured event path field.
+# Default is false to avoid query leakage.
+observability_event_include_query: false
+
+
 
 #
 # (Required) Address to which legitimate inbound traffic (traffic that passes the defined rules) should be redirected.

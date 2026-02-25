@@ -122,6 +122,47 @@ def parse_options(opts, version):
                         ),
                         default=opts.get('runtime_hardening_validation_output', 'human'))
 
+    parser.add_argument("--observability-events-enabled", dest="observability_events_enabled",
+                        help="Enable structured request event emission.",
+                        action="store_true")
+    parser.add_argument("--no-observability-events-enabled", dest="observability_events_enabled",
+                        help="Disable structured request event emission.",
+                        action="store_false")
+    parser.set_defaults(
+        observability_events_enabled=opts.get('observability_events_enabled', True)
+    )
+    parser.add_argument("--observability-events-file", dest="observability_events_file", metavar="PATH",
+                        help="Path for JSONL structured request events.",
+                        default=opts.get('observability_events_file', 'artifacts/observability/events.jsonl'))
+
+    parser.add_argument("--observability-metrics-enabled", dest="observability_metrics_enabled",
+                        help="Enable in-process metrics collection and exposition endpoint.",
+                        action="store_true")
+    parser.add_argument("--no-observability-metrics-enabled", dest="observability_metrics_enabled",
+                        help="Disable in-process metrics collection and exposition endpoint.",
+                        action="store_false")
+    parser.set_defaults(
+        observability_metrics_enabled=opts.get('observability_metrics_enabled', True)
+    )
+    parser.add_argument("--observability-metrics-path", dest="observability_metrics_path", metavar="PATH",
+                        help="Path for metrics exposition endpoint.",
+                        default=opts.get('observability_metrics_path', '/metrics'))
+    parser.add_argument("--observability-metrics-format", dest="observability_metrics_format", metavar="FMT",
+                        choices=("prometheus",),
+                        help="Metrics exposition format. Default: {}.".format(
+                            opts.get('observability_metrics_format', 'prometheus')
+                        ),
+                        default=opts.get('observability_metrics_format', 'prometheus'))
+    parser.add_argument("--observability-event-include-query", dest="observability_event_include_query",
+                        help="Include query string in structured event path field.",
+                        action="store_true")
+    parser.add_argument("--no-observability-event-include-query", dest="observability_event_include_query",
+                        help="Exclude query string from structured event path field.",
+                        action="store_false")
+    parser.set_defaults(
+        observability_event_include_query=opts.get('observability_event_include_query', False)
+    )
+
     # SSL Interception
     sslgroup = parser.add_argument_group("SSL Interception setup")
     sslgroup.add_argument("-S", "--no-ssl-mitm", dest='no_ssl',
@@ -250,6 +291,7 @@ def parseParametersFromConfigFile(_params):
         'ssl_cacert',
         'transport_parity_allowlist_file',
         'transport_parity_artifact_dir',
+        'observability_events_file',
     )
 
     parametersWithPathThatMayNotExist = (
@@ -259,6 +301,7 @@ def parseParametersFromConfigFile(_params):
         'ssl_certdir',
         'transport_parity_allowlist_file',
         'transport_parity_artifact_dir',
+        'observability_events_file',
     )
 
     translateParamNames = {

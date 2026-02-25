@@ -20,8 +20,10 @@ import tornado.web
 import tornado.httpserver
 import tornado.netutil
 import asyncio
+import re
 
 from lib.proxyhandler import *
+from lib.observability import normalize_observability_path, observability_metrics_enabled
 
 
 normpath = lambda p: os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), p))
@@ -49,6 +51,12 @@ options = {
     'runtime_hardening_allow_unsafe': False,
     'runtime_hardening_unsafe_ack': '',
     'runtime_hardening_validation_output': 'human',
+    'observability_events_enabled': True,
+    'observability_events_file': normpath('artifacts/observability/events.jsonl'),
+    'observability_metrics_enabled': True,
+    'observability_metrics_path': '/metrics',
+    'observability_metrics_format': 'prometheus',
+    'observability_event_include_query': False,
     'access_log' : '',
     'access_log_format' : 'apache2',
     'redelk_frontend_name' : 'http-redwarden',
@@ -67,6 +75,23 @@ options = {
 }
 
 logger = None
+
+
+def build_proxy_routes(scheme, bind, port, opts=None):
+    active_options = options if opts is None else opts
+    params = dict(server_bind=bind, server_port=port)
+    routes = []
+
+    if observability_metrics_enabled(active_options):
+        metrics_path = normalize_observability_path(active_options.get('observability_metrics_path', '/metrics'))
+        routes.append((r"{}$".format(re.escape(metrics_path)), MetricsHandler, params))
+
+    routes.extend([
+        (r'/.*', ProxyRequestHandler, params),
+        (scheme + r'://.*', ProxyRequestHandler, params),
+    ])
+
+    return routes
 
 
 def create_ssl_context():
@@ -106,11 +131,7 @@ async def serve_proxy(bind, port, _ssl, foosock):
     logging.getLogger('tornado.access').disabled = True
 
     try:
-        params = dict(server_bind=bind, server_port=port)
-        app = tornado.web.Application([
-            (r'/.*', ProxyRequestHandler, params),
-            (scheme + r'://.*', ProxyRequestHandler, params),
-        ],
+        app = tornado.web.Application(build_proxy_routes(scheme, bind, port),
         transforms=[RemoveXProxy2HeadersTransform, ])
 
     except OSError as e:

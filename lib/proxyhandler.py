@@ -28,6 +28,14 @@ from lib.sslintercept import SSLInterception
 from lib.utils import *
 from lib.transport_runtime import as_bool, fetch_with_fallback, normalize_transport_mode, select_primary_transport, shadow_transport
 from lib.transport_parity import apply_allowlist, compare_transport_results, load_allowlist_patterns, write_parity_artifacts
+from lib.observability import (
+    build_request_event,
+    emit_request_event,
+    normalize_runtime_profile,
+    record_request_metrics,
+    record_upstream_failure,
+    render_prometheus_metrics,
+)
 from lib.runtime_hardening import (
     apply_runtime_hardening_effective,
     evaluate_runtime_hardening,
@@ -65,6 +73,18 @@ class RemoveXProxy2HeadersTransform(tornado.web.OutputTransform):
                 headers.pop(k)
 
         return status_code, headers, chunk
+
+
+class MetricsHandler(tornado.web.RequestHandler):
+    def initialize(self, server_bind=None, server_port=None):
+        self.server_bind = server_bind
+        self.server_port = server_port
+
+    def get(self):
+        payload = render_prometheus_metrics(options)
+        self.set_status(200)
+        self.set_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+        self.write(payload)
 
 
 class ProxyRequestHandler(tornado.web.RequestHandler):
@@ -384,18 +404,21 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             primary_transport,
             _fetcher,
             fallback_enabled=fallback_enabled,
-            log_failure=lambda exc: self.logger.err(
-                '[TRANSPORT async-fallback] {}'.format(
-                    json.dumps(
-                        {
-                            'reason': 'async_fetch_error',
-                            'error': str(exc),
-                            'path': fetch_context['path'],
-                            'method': fetch_context['method'],
-                        },
-                        sort_keys=True,
+            log_failure=lambda exc: (
+                record_upstream_failure(self.options, "async", exc.__class__.__name__),
+                self.logger.err(
+                    '[TRANSPORT async-fallback] {}'.format(
+                        json.dumps(
+                            {
+                                'reason': 'async_fetch_error',
+                                'error': str(exc),
+                                'path': fetch_context['path'],
+                                'method': fetch_context['method'],
+                            },
+                            sort_keys=True,
+                        )
                     )
-                )
+                ),
             ),
         )
 
@@ -487,6 +510,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         # second = 2*digit
         # zone = (`+' | `-') 4*digit
         timestamp = datetime.utcnow()
+        started_at = time.monotonic()
 
         if hasattr(self, 'request') and hasattr(self.request, 'uri') and type(self.request.uri) == str:
             if self.request.uri.startswith('//'):
@@ -593,6 +617,28 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         if not self.request.suppress_log_entry:
             print(line)
 
+        event = build_request_event(
+            request=self.request,
+            status=self.response_status,
+            action=getattr(self.request, "observability_action", "allow"),
+            reason=getattr(self.request, "observability_reason", "99"),
+            duration_ms=(time.monotonic() - started_at) * 1000.0,
+            transport_mode=getattr(
+                self.request,
+                "observability_transport_mode",
+                normalize_transport_mode(self.options.get("transport_mode", "legacy")),
+            ),
+            runtime_profile=getattr(
+                self.request,
+                "observability_runtime_profile",
+                normalize_runtime_profile(self.options.get("runtime_profile", "compatible")),
+            ),
+            include_query=as_bool(self.options.get("observability_event_include_query", False), False),
+        )
+
+        emit_request_event(self.options, self.logger, event)
+        record_request_metrics(self.options, event)
+
     async def _internal_my_handle_request(self, *args, **kwargs):
         handler = self._my_handle_request
         if self.request.method.lower() == 'connect':
@@ -608,6 +654,14 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self.request.server_bind = self.server_bind
         self.request.suppress_log_entry = False
         self.request.redirected_to_c2 = False
+        self.request.observability_action = "allow"
+        self.request.observability_reason = "99"
+        self.request.observability_transport_mode = normalize_transport_mode(
+            self.options.get("transport_mode", "legacy")
+        )
+        self.request.observability_runtime_profile = normalize_runtime_profile(
+            self.options.get("runtime_profile", "compatible")
+        )
         self.options['verbose'] = self.origverbose
 
         self.response_status = 0
@@ -853,6 +907,12 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     else:
                         self.headers = {}
 
+        observed_transport = getattr(
+            self.request,
+            "observability_transport_mode",
+            normalize_transport_mode(self.options.get("transport_mode", "legacy")),
+        )
+
         if not dont_fetch_response:
             try:
                 assert scheme in ('http', 'https')
@@ -936,6 +996,8 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 primary_transport = select_primary_transport(
                     transport_cfg['mode'], self.request.method, content_length
                 )
+                observed_transport = primary_transport
+                self.request.observability_transport_mode = primary_transport
 
                 fetch_context = {
                     'method': self.request.method,
@@ -955,6 +1017,8 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 )
                 primary_result = primary_fetch['result']
                 transport_used = primary_fetch['transport_used']
+                observed_transport = transport_used
+                self.request.observability_transport_mode = transport_used
 
                 res = MyResponse(primary_result, self)
                 self.response_headers = res.headers
@@ -976,6 +1040,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 await self._run_shadow_parity(transport_used, fetch_context, primary_result, transport_cfg)
 
             except requests.exceptions.ConnectionError as e:
+                record_upstream_failure(self.options, observed_transport, e.__class__.__name__)
                 self.logger.err(
                     "Exception occured while reverse-proxy fetching resource : URL({}).\nException: ({})".format(
                         fetchurl, str(e)
@@ -992,6 +1057,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 return
 
             except Exception as e:
+                record_upstream_failure(self.options, observed_transport, e.__class__.__name__)
                 self.logger.err("Could not proxy request: ({})".format(str(e)))
                 if 'RemoteDisconnected' in str(e) or 'Read timed out' in str(e):
                     return

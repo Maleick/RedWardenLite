@@ -432,6 +432,8 @@ class ProxyPlugin(IProxyPlugin):
     def report(self, ret, ts='', peerIP='', path='', userAgentValue='', reason=''):
         prefix = 'ALLOW'
         col = 'green'
+        observability_action = 'drop' if ret else 'allow'
+        observability_reason = str(reason or ('99' if not ret else 'unknown'))
 
         if self.res is not None:
             return ret
@@ -446,6 +448,13 @@ class ProxyPlugin(IProxyPlugin):
                 col = 'magenta'
                 # self.logger.info(' (Report-Only) =========[X] REQUEST WOULD BE BLOCKED =======', color='magenta')
             ret = False
+
+        if hasattr(self, 'req') and self.req is not None:
+            try:
+                self.req.observability_action = observability_action
+                self.req.observability_reason = observability_reason
+            except Exception:
+                pass
 
         if not self.req.suppress_log_entry:
             self.logger.info(
