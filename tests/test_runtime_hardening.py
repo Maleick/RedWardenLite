@@ -15,6 +15,7 @@ def _base_options(**overrides):
         "runtime_profile": "compatible",
         "runtime_hardening_allow_unsafe": False,
         "runtime_hardening_unsafe_ack": "",
+        "runtime_hardening_unsafe_ack_ids": [],
         "runtime_hardening_validation_output": "human",
         "bind": "http://0.0.0.0",
         "port": [8080],
@@ -78,6 +79,7 @@ def test_strict_mode_override_with_ack_allows_startup_and_warns():
             runtime_profile="strict",
             runtime_hardening_allow_unsafe=True,
             runtime_hardening_unsafe_ack="accepted-risk-2026-02-25",
+            runtime_hardening_unsafe_ack_ids=["SEC-02-public-http-listener@port[0]"],
             bind="http://0.0.0.0",
             port=["80/http"],
         )
@@ -87,6 +89,39 @@ def test_strict_mode_override_with_ack_allows_startup_and_warns():
     warning_ids = {item["id"] for item in report["warnings"]}
     assert "SEC-02-unsafe-override-active" in warning_ids
     assert "overridden-SEC-02-public-http-listener" in warning_ids
+
+
+def test_strict_mode_override_with_ack_but_missing_check_ack_fails():
+    report = evaluate_runtime_hardening(
+        _base_options(
+            runtime_profile="strict",
+            runtime_hardening_allow_unsafe=True,
+            runtime_hardening_unsafe_ack="accepted-risk-2026-02-25",
+            runtime_hardening_unsafe_ack_ids=[],
+            bind="http://0.0.0.0",
+            port=["80/http"],
+        )
+    )
+
+    assert report["fail"] is True
+    violation_ids = {item["id"] for item in report["violations"]}
+    assert "SECX-01-unsafe-override-missing-check-ack" in violation_ids
+
+
+def test_strict_mode_override_check_ack_by_finding_id_covers_all_matches():
+    report = evaluate_runtime_hardening(
+        _base_options(
+            runtime_profile="strict",
+            runtime_hardening_allow_unsafe=True,
+            runtime_hardening_unsafe_ack="accepted-risk-2026-02-25",
+            runtime_hardening_unsafe_ack_ids=["SEC-02-public-http-listener"],
+            bind="http://0.0.0.0",
+            port=["80/http", "8080/http"],
+        )
+    )
+
+    assert report["fail"] is False
+    assert report["unsafe_ack_ids"] == ["sec-02-public-http-listener"]
 
 
 def test_validation_output_normalization_defaults_to_human_with_warning():

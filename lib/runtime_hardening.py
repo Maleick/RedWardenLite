@@ -108,6 +108,33 @@ def _finding(identifier, path, reason, safe_example):
     }
 
 
+def _normalize_ack_tokens(raw_tokens):
+    if isinstance(raw_tokens, (list, tuple, set)):
+        values = raw_tokens
+    else:
+        values = str(raw_tokens or "").split(",")
+
+    tokens = set()
+    for value in values:
+        token = str(value or "").strip().lower()
+        if token:
+            tokens.add(token)
+
+    return tokens
+
+
+def _finding_ack_token(finding):
+    return "{}@{}".format(
+        str(finding.get("id", "")).strip(),
+        str(finding.get("path", "")).strip(),
+    ).lower()
+
+
+def _is_finding_acknowledged(finding, ack_tokens):
+    finding_id = str(finding.get("id", "")).strip().lower()
+    return finding_id in ack_tokens or _finding_ack_token(finding) in ack_tokens
+
+
 def _collect_strict_unsafe_findings(options):
     findings = []
     listeners = collect_listener_specs(options)
@@ -136,6 +163,8 @@ def evaluate_runtime_hardening(options):
     output_mode = normalize_validation_output(output_raw)
     allow_unsafe = as_bool(options.get("runtime_hardening_allow_unsafe", False), False)
     unsafe_ack = str(options.get("runtime_hardening_unsafe_ack", "") or "").strip()
+    unsafe_ack_ids = options.get("runtime_hardening_unsafe_ack_ids", [])
+    unsafe_ack_tokens = _normalize_ack_tokens(unsafe_ack_ids)
 
     warnings = []
     violations = []
@@ -196,23 +225,42 @@ def evaluate_runtime_hardening(options):
                         )
                     )
                 else:
-                    warnings.append(
-                        _finding(
-                            "SEC-02-unsafe-override-active",
-                            "runtime_hardening_allow_unsafe",
-                            "Unsafe strict-mode findings were bypassed by explicit override acknowledgement.",
-                            "Disable runtime_hardening_allow_unsafe after remediation to restore strict enforcement.",
-                        )
-                    )
-                    for finding in unsafe_findings:
-                        warnings.append(
+                    unacknowledged = [
+                        finding for finding in unsafe_findings if not _is_finding_acknowledged(finding, unsafe_ack_tokens)
+                    ]
+
+                    if unacknowledged:
+                        missing_tokens = [
+                            "{}@{}".format(item["id"], item["path"]) for item in unacknowledged
+                        ]
+                        violations.append(
                             _finding(
-                                "overridden-{}".format(finding["id"]),
-                                finding["path"],
-                                finding["reason"],
-                                finding["safe_example"],
+                                "SECX-01-unsafe-override-missing-check-ack",
+                                "runtime_hardening_unsafe_ack_ids",
+                                "Unsafe override is enabled without per-check acknowledgement for: {}.".format(
+                                    ", ".join(missing_tokens)
+                                ),
+                                'Set runtime_hardening_unsafe_ack_ids to include each finding id/path (for example: ["SEC-02-public-http-listener@port[0]"]).',
                             )
                         )
+                    else:
+                        warnings.append(
+                            _finding(
+                                "SEC-02-unsafe-override-active",
+                                "runtime_hardening_allow_unsafe",
+                                "Unsafe strict-mode findings were bypassed by explicit override acknowledgement.",
+                                "Disable runtime_hardening_allow_unsafe after remediation to restore strict enforcement.",
+                            )
+                        )
+                        for finding in unsafe_findings:
+                            warnings.append(
+                                _finding(
+                                    "overridden-{}".format(finding["id"]),
+                                    finding["path"],
+                                    finding["reason"],
+                                    finding["safe_example"],
+                                )
+                            )
             else:
                 violations.extend(unsafe_findings)
 
@@ -223,6 +271,7 @@ def evaluate_runtime_hardening(options):
         "output_mode": output_mode,
         "allow_unsafe": allow_unsafe,
         "unsafe_ack": unsafe_ack,
+        "unsafe_ack_ids": sorted(unsafe_ack_tokens),
         "effective": {
             "runtime_profile": profile,
             "runtime_hardening_validation_output": output_mode,

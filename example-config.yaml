@@ -133,6 +133,10 @@ runtime_hardening_allow_unsafe: false
 # Explicit acknowledgement string for unsafe strict-mode override.
 runtime_hardening_unsafe_ack: ""
 
+# Per-check acknowledgement tokens for unsafe strict-mode override.
+# Use finding id or id@path (for example: SEC-02-public-http-listener@port[0]).
+runtime_hardening_unsafe_ack_ids: []
+
 # Startup validation output mode:
 #   human - grouped actionable summary (default)
 #   json  - machine-readable structured output

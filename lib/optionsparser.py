@@ -115,6 +115,12 @@ def parse_options(opts, version):
     parser.add_argument("--runtime-hardening-unsafe-ack", dest="runtime_hardening_unsafe_ack", metavar="TEXT",
                         help="Explicit acknowledgement for unsafe strict-mode override.",
                         default=opts.get('runtime_hardening_unsafe_ack', ''))
+    parser.add_argument("--runtime-hardening-unsafe-ack-id", dest="runtime_hardening_unsafe_ack_ids",
+                        metavar="ACK", action="append",
+                        help="Per-check acknowledgement token for unsafe strict-mode override (repeatable).")
+    parser.set_defaults(
+        runtime_hardening_unsafe_ack_ids=opts.get('runtime_hardening_unsafe_ack_ids', [])
+    )
     parser.add_argument("--runtime-hardening-validation-output", dest="runtime_hardening_validation_output",
                         metavar="MODE", choices=("human", "json"),
                         help="Startup hardening validation output mode. Default: {}.".format(
@@ -342,6 +348,7 @@ def parseParametersFromConfigFile(_params):
         'port',
         'plugin',
         'observability_metrics_allowed_cidrs',
+        'runtime_hardening_unsafe_ack_ids',
     )
 
     outparams = vars(_params)

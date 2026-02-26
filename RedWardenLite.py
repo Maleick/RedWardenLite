@@ -50,6 +50,7 @@ options = {
     'runtime_profile': 'compatible',
     'runtime_hardening_allow_unsafe': False,
     'runtime_hardening_unsafe_ack': '',
+    'runtime_hardening_unsafe_ack_ids': [],
     'runtime_hardening_validation_output': 'human',
     'observability_events_enabled': True,
     'observability_events_file': normpath('artifacts/observability/events.jsonl'),
