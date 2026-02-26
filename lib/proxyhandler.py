@@ -28,6 +28,7 @@ from lib.sslintercept import SSLInterception
 from lib.utils import *
 from lib.transport_runtime import as_bool, fetch_with_fallback, normalize_transport_mode, select_primary_transport, shadow_transport
 from lib.transport_parity import apply_allowlist, compare_transport_results, load_allowlist_patterns, write_parity_artifacts
+from lib.plugin_contracts import normalize_plugin_isolation_mode
 from lib.observability import (
     build_request_event,
     emit_request_event,
@@ -1097,6 +1098,12 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             self.request, self.request.body, res, res_body_plain
         )
 
+        if 'DropConnectionException' in str(type(res_body_modified)):
+            self.logger.err("Plugin demanded to drop the response: ({})".format(str(res_body_modified)))
+            self.request.connection.no_keep_alive = True
+            self._send_error(502)
+            return
+
         newuri = self.request.uri
         self.request.uri = origuri
 
@@ -1413,17 +1420,29 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         altered = False
         req_body_current = req_body
 
+        isolation_enabled = as_bool(self.options.get("plugin_isolation_enabled", True), True)
+        isolation_mode = normalize_plugin_isolation_mode(
+            self.options.get("plugin_isolation_failure_mode", "fail_closed")
+        )
+
         for plugin_name in self.plugins:
             instance = self.plugins[plugin_name]
+            handler = getattr(instance, 'request_handler', None)
+            if not callable(handler):
+                self.logger.dbg('Plugin "{}" does not implement `request_handler\''.format(plugin_name))
+                continue
+
             try:
-                handler = getattr(instance, 'request_handler')
-                # self.logger.dbg("Calling `request_handler' from plugin %s" % plugin_name)
                 origheaders = dict(req.headers).copy()
+                previous_body = req_body_current
 
-                req_body_current = handler(req, req_body_current)
+                next_body = handler(req, req_body_current)
+                if next_body is None:
+                    next_body = previous_body
 
-                altered = (req_body != req_body_current and req_body_current is not None)
-                if req_body_current == None: req_body_current = req_body
+                req_body_current = next_body
+                if req_body_current != previous_body:
+                    altered = True
                 for k, v in origheaders.items():
                     if k not in req.headers.keys():
                         altered = True
@@ -1433,15 +1452,27 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                         #    k, origheaders[k], req.headers[k]))
                         altered = True
 
-            except AttributeError as e:
-                if 'object has no attribute' in str(e):
-                    self.logger.dbg('Plugin "{}" does not implement `request_handler\''.format(plugin_name))
-                    if options['debug']:
-                        raise
-                else:
-                    self.logger.err("Plugin {} has thrown an exception: '{}'".format(plugin_name, str(e)))
-                    if options['debug']:
-                        raise
+            except Exception as e:
+                if isolation_enabled and isolation_mode == "fail_closed":
+                    self.logger.err(
+                        '[PLUGIN ISOLATION][FAIL-CLOSED][request_handler] plugin="{}" error="{}"'.format(
+                            plugin_name, str(e)
+                        )
+                    )
+                    return (
+                        False,
+                        plugins.IProxyPlugin.DropConnectionException(
+                            'plugin {} request_handler failed'.format(plugin_name)
+                        ),
+                    )
+
+                self.logger.err(
+                    '[PLUGIN ISOLATION][FAIL-OPEN][request_handler] plugin="{}" error="{}"'.format(
+                        plugin_name, str(e)
+                    )
+                )
+                if self.options['debug']:
+                    raise
 
         return (altered, req_body_current)
 
@@ -1449,20 +1480,33 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         res_body_current = res_body
         altered = False
 
+        isolation_enabled = as_bool(self.options.get("plugin_isolation_enabled", True), True)
+        isolation_mode = normalize_plugin_isolation_mode(
+            self.options.get("plugin_isolation_failure_mode", "fail_closed")
+        )
+
         for plugin_name in self.plugins:
             instance = self.plugins[plugin_name]
+            handler = getattr(instance, 'response_handler', None)
+            if not callable(handler):
+                self.logger.dbg('Plugin "{}" does not implement `response_handler\''.format(plugin_name))
+                continue
+
             try:
-                handler = getattr(instance, 'response_handler')
-                # self.logger.dbg("Calling `response_handler' from plugin %s" % plugin_name)
                 origheaders = {}
                 try:
                     origheaders = res.headers.copy()
                 except:
                     pass
 
-                res_body_current = handler(req, req_body, res, res_body_current)
+                previous_body = res_body_current
+                next_body = handler(req, req_body, res, res_body_current)
+                if next_body is None:
+                    next_body = previous_body
 
-                altered = (res_body_current != res_body)
+                res_body_current = next_body
+                if res_body_current != previous_body:
+                    altered = True
                 for k, v in origheaders.items():
                     if origheaders[k] != res.headers[k]:
                         # self.logger.dbg('Plugin modified response header: "{}", from: "{}" to: "{}"'.format(
@@ -1475,17 +1519,30 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
 
                 if altered:
                     self.logger.dbg('Plugin has altered the response.')
-            except AttributeError as e:
-                raise
-                if 'object has no attribute' in str(e):
-                    self.logger.dbg('Plugin "{}" does not implement `response_handler\''.format(plugin_name))
-                else:
-                    self.logger.err("Plugin {} has thrown an exception: '{}'".format(plugin_name, str(e)))
-                    if options['debug']:
-                        raise
+            except Exception as e:
+                if isolation_enabled and isolation_mode == "fail_closed":
+                    self.logger.err(
+                        '[PLUGIN ISOLATION][FAIL-CLOSED][response_handler] plugin="{}" error="{}"'.format(
+                            plugin_name, str(e)
+                        )
+                    )
+                    return (
+                        False,
+                        plugins.IProxyPlugin.DropConnectionException(
+                            'plugin {} response_handler failed'.format(plugin_name)
+                        ),
+                    )
+
+                self.logger.err(
+                    '[PLUGIN ISOLATION][FAIL-OPEN][response_handler] plugin="{}" error="{}"'.format(
+                        plugin_name, str(e)
+                    )
+                )
+                if self.options['debug']:
+                    raise
 
         if not altered:
-            return (False, res_body)
+            return (False, res_body_current)
 
         return (True, res_body_current)
 

@@ -212,6 +212,33 @@ def parse_options(opts, version):
     plugins.add_argument('-L', '--list-plugins', action='store_true', help='List available plugins.')
     plugins.add_argument('-p', '--plugin', dest='plugin', action='append', metavar='PATH', type=str,
                          help="Specifies plugin's path to be loaded.")
+    plugins.add_argument('--plugin-api-version', dest='plugin_api_version', metavar='VER', type=str,
+                         help='Runtime plugin API compatibility version.',
+                         default=opts.get('plugin_api_version', '1.0'))
+    plugins.add_argument('--plugin-require-capabilities', dest='plugin_require_capabilities',
+                         help='Require formal plugin capability metadata during plugin load.',
+                         action='store_true')
+    plugins.add_argument('--no-plugin-require-capabilities', dest='plugin_require_capabilities',
+                         help='Allow loading legacy plugins without formal capability metadata.',
+                         action='store_false')
+    plugins.set_defaults(
+        plugin_require_capabilities=opts.get('plugin_require_capabilities', True)
+    )
+    plugins.add_argument('--plugin-isolation-enabled', dest='plugin_isolation_enabled',
+                         help='Enable runtime plugin execution isolation boundaries.',
+                         action='store_true')
+    plugins.add_argument('--no-plugin-isolation-enabled', dest='plugin_isolation_enabled',
+                         help='Disable runtime plugin execution isolation boundaries.',
+                         action='store_false')
+    plugins.set_defaults(
+        plugin_isolation_enabled=opts.get('plugin_isolation_enabled', True)
+    )
+    plugins.add_argument('--plugin-isolation-failure-mode', dest='plugin_isolation_failure_mode',
+                         metavar='MODE', choices=('fail_closed', 'fail_open'),
+                         help='Plugin isolation failure behavior. Default: {}.'.format(
+                             opts.get('plugin_isolation_failure_mode', 'fail_closed')
+                         ),
+                         default=opts.get('plugin_isolation_failure_mode', 'fail_closed'))
 
     feed_with_plugin_options(opts, parser)
 

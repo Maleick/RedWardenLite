@@ -5,6 +5,11 @@ import inspect
 from io import StringIO
 import csv
 
+from lib.plugin_contracts import (
+    metadata_from_plugin_class,
+    normalize_plugin_api_version,
+    validate_plugin_metadata,
+)
 from lib.proxylogger import ProxyLogger
 
 
@@ -41,6 +46,7 @@ class PluginsLoader:
     def __init__(self, logger, options, instantiate=True):
         self.options = options
         self.plugins = {}
+        self.plugin_metadata = {}
         self.called = False
         self.logger = logger
         self.instantiate = instantiate
@@ -58,6 +64,22 @@ class PluginsLoader:
     #   plugins = {'plugin1': instance, 'plugin2': instance, ...}
     def get_plugins(self):
         return self.plugins
+
+    def get_plugin_metadata(self):
+        return self.plugin_metadata
+
+    @staticmethod
+    def _as_bool(value, default):
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        text = str(value).strip().lower()
+        if text in {"1", "true", "yes", "on"}:
+            return True
+        if text in {"0", "false", "no", "off"}:
+            return False
+        return default
 
     #
     # Following function parses input plugin path with parameters and decomposes
@@ -130,6 +152,21 @@ class PluginsLoader:
                 if not found:
                     raise TypeError('Plugin does not inherit from IProxyPlugin.')
 
+                core_api_version = normalize_plugin_api_version(
+                    self.options.get("plugin_api_version", "1.0")
+                )
+                require_metadata = PluginsLoader._as_bool(
+                    self.options.get("plugin_require_capabilities", True),
+                    True,
+                )
+                raw_metadata = metadata_from_plugin_class(handler)
+                validated_metadata = validate_plugin_metadata(
+                    name,
+                    raw_metadata,
+                    core_api_version,
+                    require_metadata=require_metadata,
+                )
+
                 # Call plugin's __init__ with the `logger' instance passed to it.
                 if self.instantiate:
                     instance = handler(PluginsLoader.InjectedLogger(name), self.options)
@@ -137,6 +174,14 @@ class PluginsLoader:
                     instance = handler
 
                 self.logger.dbg('Found class "%s".' % self.options['plugin_class_name'])
+                self.logger.dbg(
+                    'Plugin "{}" metadata: api={} version={} capabilities={}'.format(
+                        name,
+                        validated_metadata.get("core_api_version"),
+                        validated_metadata.get("plugin_version"),
+                        ",".join(validated_metadata.get("capabilities", [])),
+                    )
+                )
 
             except AttributeError as e:
                 self.logger.err('Plugin "%s" loading has failed: "%s".' %
@@ -152,6 +197,12 @@ class PluginsLoader:
             if not instance:
                 self.logger.err('Didn\'t find supported class in module "%s"' % name)
             else:
+                self.plugin_metadata[name] = validated_metadata
+                if self.instantiate:
+                    try:
+                        setattr(instance, "plugin_metadata", validated_metadata)
+                    except Exception:
+                        pass
                 self.plugins[name] = instance
                 self.logger.info('Plugin "%s" has been installed.' % name)
 

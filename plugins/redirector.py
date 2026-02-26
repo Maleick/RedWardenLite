@@ -25,6 +25,19 @@ class ProxyPlugin(IProxyPlugin):
     class AlterHostHeader(Exception):
         pass
 
+    PLUGIN_METADATA = {
+        "schema_version": "1",
+        "plugin_name": "redirector",
+        "plugin_version": "1.0.0",
+        "core_api_version": "1.0",
+        "capabilities": [
+            "request_handler",
+            "response_handler",
+            "policy_engine",
+            "action_executor",
+        ],
+    }
+
     RequestsHashesDatabaseFile = '.anti-replay.sqlite'
     DynamicWhitelistFile = '.peers.sqlite'
 
@@ -103,6 +116,10 @@ class ProxyPlugin(IProxyPlugin):
     @staticmethod
     def get_name():
         return 'redirector'
+
+    @staticmethod
+    def get_metadata():
+        return dict(ProxyPlugin.PLUGIN_METADATA)
 
     def drop_reason(self, text):
         self.logger.err(text, color='magenta')

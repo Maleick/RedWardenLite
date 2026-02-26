@@ -86,6 +86,27 @@ drop_invalid_http_requests: True
 
 #
 # ===================================
+# Plugin contracts and isolation
+# ===================================
+#
+
+# Core plugin API compatibility version.
+plugin_api_version: "1.0"
+
+# Require formal plugin capability metadata at load time.
+plugin_require_capabilities: true
+
+# Enable runtime plugin isolation boundaries.
+plugin_isolation_enabled: true
+
+# Plugin failure behavior:
+#   fail_closed - drop request/response path on plugin error (default)
+#   fail_open   - continue without plugin mutation on plugin error
+plugin_isolation_failure_mode: fail_closed
+
+
+#
+# ===================================
 # Async transport parity controls
 # ===================================
 #

@@ -31,6 +31,10 @@ class IProxyPlugin(ABC):
     def get_name():
         return 'IProxyPlugin'
 
+    @staticmethod
+    def get_metadata():
+        return None
+
     @abstractmethod
     def help(self, parser):
         '''
