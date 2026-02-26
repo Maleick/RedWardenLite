@@ -128,6 +128,51 @@ def parse_options(opts, version):
                         ),
                         default=opts.get('runtime_hardening_validation_output', 'human'))
 
+    parser.add_argument("--distributed-policy-enabled", dest="distributed_policy_enabled",
+                        help="Enable distributed policy convergence artifact generation.",
+                        action="store_true")
+    parser.add_argument("--no-distributed-policy-enabled", dest="distributed_policy_enabled",
+                        help="Disable distributed policy convergence artifact generation.",
+                        action="store_false")
+    parser.set_defaults(
+        distributed_policy_enabled=opts.get('distributed_policy_enabled', False)
+    )
+    parser.add_argument("--distributed-policy-node-id", dest="distributed_policy_node_id", metavar="ID",
+                        help="Node identifier used in distributed policy advertisements.",
+                        default=opts.get('distributed_policy_node_id', 'node-local'))
+    parser.add_argument("--distributed-policy-peer-node", dest="distributed_policy_peer_nodes",
+                        metavar="NODE", action="append",
+                        help="Peer node identifier for deterministic distributed policy simulations (repeatable).")
+    parser.set_defaults(
+        distributed_policy_peer_nodes=opts.get('distributed_policy_peer_nodes', [])
+    )
+    parser.add_argument("--distributed-policy-artifact-dir", dest="distributed_policy_artifact_dir",
+                        metavar="DIR",
+                        help="Artifact directory for distributed policy convergence outputs.",
+                        default=opts.get('distributed_policy_artifact_dir', 'artifacts/distributed/policy'))
+    parser.add_argument("--distributed-policy-retention-count", dest="distributed_policy_retention_count",
+                        metavar="NUM", type=int,
+                        help="How many policy convergence artifacts to retain.",
+                        default=opts.get('distributed_policy_retention_count', 20))
+
+    parser.add_argument("--fleet-telemetry-enabled", dest="fleet_telemetry_enabled",
+                        help="Enable fleet telemetry aggregation artifact generation.",
+                        action="store_true")
+    parser.add_argument("--no-fleet-telemetry-enabled", dest="fleet_telemetry_enabled",
+                        help="Disable fleet telemetry aggregation artifact generation.",
+                        action="store_false")
+    parser.set_defaults(
+        fleet_telemetry_enabled=opts.get('fleet_telemetry_enabled', False)
+    )
+    parser.add_argument("--fleet-telemetry-artifact-dir", dest="fleet_telemetry_artifact_dir",
+                        metavar="DIR",
+                        help="Artifact directory for fleet telemetry snapshots.",
+                        default=opts.get('fleet_telemetry_artifact_dir', 'artifacts/distributed/fleet'))
+    parser.add_argument("--fleet-telemetry-retention-count", dest="fleet_telemetry_retention_count",
+                        metavar="NUM", type=int,
+                        help="How many fleet telemetry snapshots to retain.",
+                        default=opts.get('fleet_telemetry_retention_count', 20))
+
     parser.add_argument("--observability-events-enabled", dest="observability_events_enabled",
                         help="Enable structured request event emission.",
                         action="store_true")
@@ -341,6 +386,8 @@ def parseParametersFromConfigFile(_params):
         'transport_parity_allowlist_file',
         'transport_parity_artifact_dir',
         'observability_events_file',
+        'distributed_policy_artifact_dir',
+        'fleet_telemetry_artifact_dir',
     )
 
     parametersWithPathThatMayNotExist = (
@@ -351,6 +398,8 @@ def parseParametersFromConfigFile(_params):
         'transport_parity_allowlist_file',
         'transport_parity_artifact_dir',
         'observability_events_file',
+        'distributed_policy_artifact_dir',
+        'fleet_telemetry_artifact_dir',
     )
 
     translateParamNames = {
@@ -376,6 +425,7 @@ def parseParametersFromConfigFile(_params):
         'plugin',
         'observability_metrics_allowed_cidrs',
         'runtime_hardening_unsafe_ack_ids',
+        'distributed_policy_peer_nodes',
     )
 
     outparams = vars(_params)

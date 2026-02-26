@@ -107,6 +107,37 @@ plugin_isolation_failure_mode: fail_closed
 
 #
 # ===================================
+# Distributed coordination and fleet telemetry
+# ===================================
+#
+
+# Enable deterministic distributed policy convergence artifact generation.
+distributed_policy_enabled: false
+
+# Local node identifier for policy advertisements.
+distributed_policy_node_id: node-local
+
+# Optional peer node identifiers (for deterministic simulation workflows).
+distributed_policy_peer_nodes: []
+
+# Directory for policy convergence artifacts.
+distributed_policy_artifact_dir: artifacts/distributed/policy
+
+# Number of policy convergence artifacts to retain.
+distributed_policy_retention_count: 20
+
+# Enable fleet telemetry aggregation artifact generation.
+fleet_telemetry_enabled: false
+
+# Directory for fleet telemetry snapshots.
+fleet_telemetry_artifact_dir: artifacts/distributed/fleet
+
+# Number of fleet telemetry snapshots to retain.
+fleet_telemetry_retention_count: 20
+
+
+#
+# ===================================
 # Async transport parity controls
 # ===================================
 #
