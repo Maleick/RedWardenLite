@@ -160,9 +160,22 @@ observability_metrics_path: /metrics
 # Metrics format (fixed to prometheus in this phase).
 observability_metrics_format: prometheus
 
+# Metrics endpoint access policy:
+#   open     - no additional app-level restriction (default)
+#   loopback - allow only loopback clients
+#   cidr     - allow clients only from observability_metrics_allowed_cidrs
+observability_metrics_access_mode: open
+
+# Allowed CIDRs when access mode is `cidr`.
+observability_metrics_allowed_cidrs: []
+
 # Include query string in structured event path field.
 # Default is false to avoid query leakage.
 observability_event_include_query: false
+
+# Deterministic sampling rate for structured events (0.0-1.0).
+# 1.0 emits all events, 0.0 emits none.
+observability_events_sampling_rate: 1.0
 
 
 

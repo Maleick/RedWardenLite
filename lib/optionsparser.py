@@ -153,6 +153,17 @@ def parse_options(opts, version):
                             opts.get('observability_metrics_format', 'prometheus')
                         ),
                         default=opts.get('observability_metrics_format', 'prometheus'))
+    parser.add_argument("--observability-metrics-access-mode", dest="observability_metrics_access_mode",
+                        metavar="MODE", choices=("open", "loopback", "cidr"),
+                        help="Metrics endpoint access policy. Default: {}.".format(
+                            opts.get('observability_metrics_access_mode', 'open')
+                        ),
+                        default=opts.get('observability_metrics_access_mode', 'open'))
+    parser.add_argument("--observability-metrics-allowed-cidr", dest="observability_metrics_allowed_cidrs",
+                        metavar="CIDR",
+                        help="Allowed CIDR for metrics endpoint when access mode is cidr (repeatable).",
+                        action="append",
+                        default=opts.get('observability_metrics_allowed_cidrs', []))
     parser.add_argument("--observability-event-include-query", dest="observability_event_include_query",
                         help="Include query string in structured event path field.",
                         action="store_true")
@@ -162,6 +173,11 @@ def parse_options(opts, version):
     parser.set_defaults(
         observability_event_include_query=opts.get('observability_event_include_query', False)
     )
+    parser.add_argument("--observability-events-sampling-rate", dest="observability_events_sampling_rate",
+                        metavar="RATE",
+                        help="Deterministic sampling rate for structured events (0.0-1.0).",
+                        type=float,
+                        default=opts.get('observability_events_sampling_rate', 1.0))
 
     # SSL Interception
     sslgroup = parser.add_argument_group("SSL Interception setup")
@@ -325,6 +341,7 @@ def parseParametersFromConfigFile(_params):
     valuesThatNeedsToBeList = (
         'port',
         'plugin',
+        'observability_metrics_allowed_cidrs',
     )
 
     outparams = vars(_params)

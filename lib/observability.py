@@ -1,6 +1,8 @@
 import json
 import os
 import threading
+import hashlib
+import ipaddress
 from collections import defaultdict
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -11,6 +13,8 @@ from lib.transport_runtime import as_bool, normalize_transport_mode
 DEFAULT_OBSERVABILITY_EVENT_FILE = "artifacts/observability/events.jsonl"
 DEFAULT_OBSERVABILITY_METRICS_PATH = "/metrics"
 DEFAULT_OBSERVABILITY_METRICS_FORMAT = "prometheus"
+DEFAULT_OBSERVABILITY_METRICS_ACCESS_MODE = "open"
+DEFAULT_OBSERVABILITY_EVENT_SAMPLING_RATE = 1.0
 
 DEFAULT_HISTOGRAM_BUCKETS = (
     0.005,
@@ -43,6 +47,26 @@ def normalize_runtime_profile(value):
     return lowered
 
 
+def normalize_metrics_access_mode(value):
+    lowered = str(value or DEFAULT_OBSERVABILITY_METRICS_ACCESS_MODE).strip().lower()
+    if lowered not in ("open", "loopback", "cidr"):
+        return DEFAULT_OBSERVABILITY_METRICS_ACCESS_MODE
+    return lowered
+
+
+def normalize_sampling_rate(value):
+    try:
+        rate = float(value)
+    except (TypeError, ValueError):
+        return DEFAULT_OBSERVABILITY_EVENT_SAMPLING_RATE
+
+    if rate < 0.0:
+        return 0.0
+    if rate > 1.0:
+        return 1.0
+    return rate
+
+
 def _normalize_label(value, default="unknown"):
     text = str(value or "").strip()
     if not text:
@@ -60,6 +84,50 @@ def extract_event_path(uri, include_query=False):
     if include_query and parsed.query:
         path += "?" + parsed.query
     return path
+
+
+def _iter_allowed_cidrs(raw_cidrs):
+    if isinstance(raw_cidrs, (list, tuple)):
+        candidates = raw_cidrs
+    else:
+        candidates = str(raw_cidrs or "").split(",")
+
+    networks = []
+    for value in candidates:
+        text = str(value or "").strip()
+        if not text:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(text, strict=False))
+        except ValueError:
+            continue
+
+    return networks
+
+
+def is_metrics_access_allowed(options, remote_ip):
+    mode = normalize_metrics_access_mode(
+        options.get("observability_metrics_access_mode", DEFAULT_OBSERVABILITY_METRICS_ACCESS_MODE)
+    )
+    if mode == "open":
+        return True
+
+    try:
+        ip_obj = ipaddress.ip_address(str(remote_ip or "").strip())
+    except ValueError:
+        return False
+
+    if mode == "loopback":
+        return bool(ip_obj.is_loopback)
+
+    allowed = _iter_allowed_cidrs(options.get("observability_metrics_allowed_cidrs", []))
+    if not allowed:
+        return False
+
+    for network in allowed:
+        if ip_obj in network:
+            return True
+    return False
 
 
 def build_request_event(
@@ -225,8 +293,33 @@ def observability_metrics_enabled(options):
     return as_bool(options.get("observability_metrics_enabled", True), True)
 
 
-def emit_request_event(options, logger, event):
+def should_emit_request_event(options, event):
     if not observability_events_enabled(options):
+        return False
+
+    rate = normalize_sampling_rate(
+        options.get("observability_events_sampling_rate", DEFAULT_OBSERVABILITY_EVENT_SAMPLING_RATE)
+    )
+    if rate <= 0.0:
+        return False
+    if rate >= 1.0:
+        return True
+
+    stable_key = "{}|{}|{}|{}|{}|{}".format(
+        str(event.get("method", "UNKNOWN")),
+        str(event.get("path", "/")),
+        str(event.get("status", 0)),
+        str(event.get("action", "allow")),
+        str(event.get("reason", "99")),
+        str(event.get("transport_mode", "legacy")),
+    )
+    digest = hashlib.sha256(stable_key.encode("utf-8")).hexdigest()
+    sample_value = int(digest[:8], 16) / float(0xFFFFFFFF)
+    return sample_value < rate
+
+
+def emit_request_event(options, logger, event):
+    if not should_emit_request_event(options, event):
         return False
 
     out_file = str(options.get("observability_events_file", DEFAULT_OBSERVABILITY_EVENT_FILE) or "").strip()

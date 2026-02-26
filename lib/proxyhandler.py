@@ -31,6 +31,7 @@ from lib.transport_parity import apply_allowlist, compare_transport_results, loa
 from lib.observability import (
     build_request_event,
     emit_request_event,
+    is_metrics_access_allowed,
     normalize_runtime_profile,
     record_request_metrics,
     record_upstream_failure,
@@ -81,6 +82,13 @@ class MetricsHandler(tornado.web.RequestHandler):
         self.server_port = server_port
 
     def get(self):
+        remote_ip = getattr(self.request, "remote_ip", "")
+        if not is_metrics_access_allowed(options, remote_ip):
+            self.set_status(403)
+            self.set_header("Content-Type", "text/plain; charset=utf-8")
+            self.write("forbidden\n")
+            return
+
         payload = render_prometheus_metrics(options)
         self.set_status(200)
         self.set_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
