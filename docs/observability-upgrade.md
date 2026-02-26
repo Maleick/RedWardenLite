@@ -8,8 +8,10 @@ Phase 5 adds structured request telemetry and low-cardinality metrics so contrib
 
 - Structured events: enabled
 - Event sink: `artifacts/observability/events.jsonl`
+- Event sampling rate: `1.0` (emit all events)
 - Metrics: enabled
 - Metrics endpoint: `/metrics`
+- Metrics access mode: `open`
 - Query-string capture in events: disabled by default
 
 ## Quick Verification
@@ -65,12 +67,50 @@ jq -r 'select(.action=="drop") | [.timestamp,.reason,.path,.status] | @tsv' arti
   - `observability_events_enabled: false`
 - Change events sink:
   - `observability_events_file: <path>`
+- Set event sampling:
+  - `observability_events_sampling_rate: 0.0..1.0`
 - Disable metrics:
   - `observability_metrics_enabled: false`
 - Move metrics path:
   - `observability_metrics_path: /metrics`
+- Restrict metrics access:
+  - `observability_metrics_access_mode: open | loopback | cidr`
+  - `observability_metrics_allowed_cidrs: ["10.0.0.0/8"]` (for `cidr` mode)
 
 Telemetry is best-effort: sink failures are logged and do not block request handling.
+
+## Event Sink Lifecycle (Retention + Rotation)
+
+Contributor verification checklist:
+
+1. Confirm sink path and writeability:
+
+```bash
+test -w "$(dirname artifacts/observability/events.jsonl)" && echo "sink path writable"
+```
+
+2. Validate events are being appended:
+
+```bash
+wc -l artifacts/observability/events.jsonl
+tail -n 5 artifacts/observability/events.jsonl
+```
+
+3. Validate rotated file handling (external rotation policy):
+- Ensure rotation keeps JSONL line boundaries.
+- Ensure current file is recreated and writable after rotation.
+
+4. Re-run contract checks:
+
+```bash
+python -m pytest -q tests/test_observability_contracts.py
+```
+
+## Sampling Notes
+
+- Sampling is deterministic for the same event payload.
+- `1.0` emits all events, `0.0` emits none, intermediate values apply deterministic selection.
+- Sampling affects event sink writes only; metrics remain unsampled in this phase.
 
 ## CI Gate
 
