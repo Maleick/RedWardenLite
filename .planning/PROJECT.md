@@ -2,7 +2,7 @@
 
 ## What This Is
 
-RedWardenLite is a lightweight Python HTTP/HTTPS reverse proxy used to filter, redirect, or proxy traffic based on configurable policies. This project is focused on evolving the existing brownfield codebase into a safer, more testable, and more operable system without breaking established behavior. Primary users are security operators and engineers running policy-gated redirector infrastructure.
+RedWardenLite is a Python/Tornado HTTP/HTTPS reverse proxy that filters, redirects, or proxies traffic through policy decisions with auditable reason codes. The codebase now has locked behavior contracts, transport parity checks, runtime hardening, and structured observability from milestone v1.0.
 
 ## Core Value
 
@@ -12,45 +12,46 @@ Legitimate traffic must pass reliably while non-conformant or suspicious traffic
 
 ### Validated
 
-- ✓ Multi-port HTTP/HTTPS reverse proxy execution works in production-style host environments — existing
-- ✓ Plugin-driven request/response policy pipeline (allow/drop/redirect/proxy) is implemented — existing
-- ✓ SSL interception and certificate handling are integrated (`ca-cert`, dynamic cert generation) — existing
-- ✓ IP/CIDR, reverse-lookup, and header-based filtering controls are available — existing
-- ✓ Access and operational logging paths (Apache2/RedELK formats) are supported — existing
+- ✓ Policy reason-code and side-effect behavior contracts with deterministic CI gates — v1.0
+- ✓ Async transport parity framework with fallback and artifacts — v1.0
+- ✓ Internal policy engine decomposition with compatibility facade — v1.0
+- ✓ Runtime hardening profile and startup validation UX — v1.0
+- ✓ Structured observability events and Prometheus metrics contracts — v1.0
 
 ### Active
 
-- [ ] Expand behavior-lockdown tests to cover drop-action and connection side-effect contracts
-- [ ] Add async upstream fetch path with parity checks against current behavior
-- [ ] Decompose redirector policy logic into smaller maintainable modules
-- [ ] Add strict runtime hardening profile (TLS verification + safer operational defaults)
-- [ ] Add structured observability outputs (JSON logs and service-level counters)
-- [ ] Add first-class config validation and deployment templates for repeatable operations
+- [ ] Protect observability surfaces (metrics access and event handling) for production-grade operation
+- [ ] Add repeatable deployment templates and upgrade-safe operational packaging
+- [ ] Expand CI compatibility matrix across supported Python versions
+- [ ] Add operator-deep incident/forensic workflows built on telemetry outputs
+- [ ] Refine strict-mode override ergonomics with finer-grained safety controls
 
 ### Out of Scope
 
-- Full rewrite into a new language/runtime — preserve proven Python/Tornado deployment footprint first
-- Major protocol redesign beyond current HTTP/HTTPS reverse-proxy model — not required for current value
-- Building a full management UI/control-plane product — focus remains core proxy behavior and operator workflows
+- Full rewrite into a new runtime/language — maintain Python/Tornado compatibility path
+- External control-plane/UI productization — focus remains core proxy runtime and operator workflows
+- Distributed multi-node orchestration in this milestone — single-node operational maturity first
 
 ## Context
 
-The repository is an actively used brownfield proxy implementation with established policy behavior and operational assumptions. Existing architecture centers around `lib/proxyhandler.py` and `plugins/redirector.py`, with limited modular boundaries and historically minimal automated test coverage. Recent work introduced a policy reason-code behavior-lockdown suite and CI test execution to protect refactors. The immediate roadmap should preserve externally visible behavior while reducing maintenance risk and improving reliability under load.
+Milestone v1.0 closed all planned phases (1-5) and established a stable baseline of automated verification (`67` tests passing). The next milestone targets operational maturity: safer exposure of telemetry, deployment standardization, broader runtime compatibility validation, and deeper operator runbooks. Existing artifacts in `.planning/milestones/` are the historical source of v1.0 decisions and scope.
 
 ## Constraints
 
-- **Tech stack**: Python/Tornado codebase remains the primary runtime — avoid disruptive rewrites during this milestone
-- **Behavior compatibility**: Existing policy reason semantics must remain stable unless explicitly changed and documented — protects operator expectations
-- **Operational safety**: No secrets or sensitive credentials in planning artifacts or prompts — required for secure collaboration
-- **Execution style**: Fast iterative delivery (`quick` depth, parallel execution where safe) — supports momentum on modernization backlog
+- **Tech stack**: Python/Tornado remains the runtime baseline — avoid disruptive stack churn.
+- **Compatibility**: External proxy behavior and policy ordering must remain stable unless explicitly versioned.
+- **Operational safety**: No secrets in planning artifacts, prompts, logs, or generated docs.
+- **Delivery pace**: Keep incremental phase-scoped changes with deterministic verification gates.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Incremental brownfield modernization over rewrite | Existing proxy behavior is already deployed and valuable; replacement risk is high | — Pending |
-| Lock behavior with tests before major refactors | Prevent regressions while changing high-coupling modules | ✓ Good |
-| Initialize with auto workflow in YOLO mode | Reduce setup friction and create full planning baseline in one pass | ✓ Good |
+| Incremental brownfield modernization over rewrite | Existing deployed behavior has value and rewrite risk is high | ✓ Good |
+| Behavior-lockdown before major refactors | Prevent regressions while decoupling core modules | ✓ Good |
+| Async transport parity before removal of legacy internals | Preserve response contract safety during transport evolution | ✓ Good |
+| Strict runtime profile as opt-in first | Reduce rollout risk while introducing hardening controls | ✓ Good |
+| v1.1 focus on operational maturity and deployability | Baseline behavior is stable; next risk is operations lifecycle | — Pending |
 
 ---
-*Last updated: 2026-02-25 after initialization*
+*Last updated: 2026-02-26 after v1.0 milestone completion and v1.1 kickoff*

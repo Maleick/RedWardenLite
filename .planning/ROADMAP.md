@@ -2,100 +2,72 @@
 
 ## Overview
 
-This roadmap modernizes RedWardenLite in low-risk increments: lock externally visible behavior first, then evolve transport and internal architecture with parity guardrails, and finish with runtime hardening plus operational observability.
+v1.0 delivered the modernization baseline (contracts, parity, decomposition, hardening, observability). v1.1 focuses on operational maturity: hardened observability exposure, deployment templates, wider compatibility gates, and deeper incident runbooks.
+
+## Milestones
+
+- ✅ **v1.0 milestone** — Phases 1-5 shipped on 2026-02-25 ([archive roadmap](.planning/milestones/v1.0-ROADMAP.md), [archive requirements](.planning/milestones/v1.0-REQUIREMENTS.md))
+- 🚧 **v1.1 operational maturity** — Phases 6-8 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-- [x] **Phase 1: Contract Foundation** - Lock policy behavior with tests, CI gates, and runbook clarity (completed 2026-02-25)
-- [x] **Phase 2: Async Transport Parity** - Introduce async upstream path with controlled parity checks (completed 2026-02-25)
-- [x] **Phase 3: Policy Engine Decomposition** - Split redirector internals into testable maintainable modules (completed 2026-02-25)
-- [x] **Phase 4: Runtime Hardening** - Add strict safety defaults and validation for secure operation (completed 2026-02-25)
-- [x] **Phase 5: Observability Upgrade** - Deliver structured telemetry for incident response and tuning (completed 2026-02-25)
+- [ ] **Phase 6: Observability Access and Retention Hardening** - Add safe metrics exposure controls and production event lifecycle guidance
+- [ ] **Phase 7: Deployment Templates and Compatibility Matrix** - Ship repeatable deployment paths and multi-version CI coverage
+- [ ] **Phase 8: Operator Forensics and Runtime Override Refinement** - Add deep incident workflows and finer strict-mode safety controls
 
 ## Phase Details
 
-### Phase 1: Contract Foundation
-**Goal**: Establish behavior-lockdown as a hard gate for future refactors.
-**Depends on**: Nothing (first phase)
-**Requirements**: PLAT-01, PLAT-02, PLAT-03
+### Phase 6: Observability Access and Retention Hardening
+**Goal**: Harden observability surfaces without breaking existing telemetry contracts.
+**Depends on**: Phase 5
+**Requirements**: OBSX-01, OBSX-02, OBSX-03
 **Success Criteria** (what must be TRUE):
-  1. Policy reason-code contract tests are deterministic and pass in local and CI environments.
-  2. CI enforces the contract suite on pushes and pull requests.
-  3. Contributors can run and interpret behavior-lockdown checks from project docs.
+  1. Metrics endpoint access control is explicitly configurable and documented.
+  2. Event retention/rotation guidance is contributor-usable and verified.
+  3. Event sampling controls preserve stable schema and non-blocking behavior.
 **Plans**: 2 plans
 
 Plans:
-- [x] 01-01: Expand and stabilize policy reason-code contract matrix
-- [x] 01-02: CI enforcement and test runbook integration
+- [ ] 06-01: Metrics access controls and event sink lifecycle contract updates
+- [ ] 06-02: Sampling controls, runbook integration, and verification closure
 
-### Phase 2: Async Transport Parity
-**Goal**: Introduce an async fetch path without changing external proxy behavior.
-**Depends on**: Phase 1
-**Requirements**: NET-01, NET-02, NET-03
+### Phase 7: Deployment Templates and Compatibility Matrix
+**Goal**: Make deployment and upgrade paths repeatable across supported environments.
+**Depends on**: Phase 6
+**Requirements**: DPLY-01, DPLY-02, CI-01
 **Success Criteria** (what must be TRUE):
-  1. Async upstream path can be toggled by explicit configuration.
-  2. Parity checks show no unacceptable divergence for status/header/body behavior.
-  3. Operators can revert to legacy path via configuration-only rollback.
-**Plans**: 3 plans
-
-Plans:
-- [x] 02-01: Add feature-flagged async fetch path scaffold
-- [x] 02-02: Build parity comparison harness and baseline report
-- [x] 02-03: Add rollback/operational guidance for transport switching
-
-### Phase 3: Policy Engine Decomposition
-**Goal**: Reduce coupling by separating policy checks and action logic while preserving behavior.
-**Depends on**: Phase 2
-**Requirements**: POL-01, POL-02, POL-03
-**Success Criteria** (what must be TRUE):
-  1. Redirector policy checks are extracted into smaller units with unchanged outcomes.
-  2. Decision and action paths are independently testable.
-  3. Existing plugin integration behavior remains backward compatible.
-**Plans**: 3 plans
-
-Plans:
-- [x] 03-01: Extract policy-check modules with compatibility facade
-- [x] 03-02: Separate decision/action flow and validate contracts
-- [x] 03-03: Backward compatibility verification and cleanup
-
-### Phase 4: Runtime Hardening
-**Goal**: Enforce secure-by-default runtime behavior with explicit validation.
-**Depends on**: Phase 3
-**Requirements**: SEC-01, SEC-02, SEC-03
-**Success Criteria** (what must be TRUE):
-  1. Strict runtime profile enables safer defaults without breaking compatibility path.
-  2. Unsafe bind/TLS combinations are rejected with actionable startup errors.
-  3. Config validation catches conflicting security settings before runtime.
+  1. Standard deployment templates are provided and validated.
+  2. Upgrade smoke workflow is documented and executable.
+  3. CI validates contract suites across supported Python versions.
 **Plans**: 2 plans
 
 Plans:
-- [x] 04-01: Implement strict profile enforcement toggles
-- [x] 04-02: Add configuration validation and failure messaging
+- [ ] 07-01: Deployment template package (systemd + container baseline)
+- [ ] 07-02: Multi-version CI and upgrade smoke verification
 
-### Phase 5: Observability Upgrade
-**Goal**: Make production behavior measurable and diagnosable without verbose debug dependence.
-**Depends on**: Phase 4
-**Requirements**: OBS-01, OBS-02, OBS-03
+### Phase 8: Operator Forensics and Runtime Override Refinement
+**Goal**: Improve incident response depth and strict-mode operational ergonomics.
+**Depends on**: Phase 7
+**Requirements**: OPS-01, OPS-02, SECX-01, SECX-02
 **Success Criteria** (what must be TRUE):
-  1. Structured logs include stable outcome fields and reason codes.
-  2. Metrics expose request volume, reason distributions, failures, and latency.
-  3. Operators can diagnose incidents with telemetry and normal log verbosity.
+  1. Forensic runbook flows are deterministic and artifact-driven.
+  2. Runtime unsafe override model supports finer-grained acknowledgement.
+  3. Strict-mode remediation messages are complete and actionable.
 **Plans**: 2 plans
 
 Plans:
-- [x] 05-01: Introduce structured event/log schema
-- [x] 05-02: Add metrics emission and operational dashboard guide
+- [ ] 08-01: Incident forensics workflow and evidence bundle procedure
+- [ ] 08-02: Runtime override granularity and remediation UX updates
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Contract Foundation | 2/2 | Complete    | 2026-02-25 |
-| 2. Async Transport Parity | 3/3 | Complete   | 2026-02-25 |
+| 1. Contract Foundation | 2/2 | Complete | 2026-02-25 |
+| 2. Async Transport Parity | 3/3 | Complete | 2026-02-25 |
 | 3. Policy Engine Decomposition | 3/3 | Complete | 2026-02-25 |
 | 4. Runtime Hardening | 2/2 | Complete | 2026-02-25 |
 | 5. Observability Upgrade | 2/2 | Complete | 2026-02-25 |
+| 6. Observability Access and Retention Hardening | 0/2 | Not started | - |
+| 7. Deployment Templates and Compatibility Matrix | 0/2 | Not started | - |
+| 8. Operator Forensics and Runtime Override Refinement | 0/2 | Not started | - |

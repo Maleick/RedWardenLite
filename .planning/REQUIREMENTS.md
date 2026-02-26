@@ -1,90 +1,69 @@
 # Requirements: RedWardenLite Evolution
 
-**Defined:** 2026-02-25
+**Defined:** 2026-02-26
 **Core Value:** Legitimate traffic must pass reliably while non-conformant or suspicious traffic is blocked predictably with auditable policy reasons.
 
-## v1 Requirements
+## v1.1 Requirements
 
-### Platform Stability
+### Observability Hardening
 
-- [x] **PLAT-01**: Policy reason-code behavior is covered by automated regression tests for all active drop/allow rule families
-- [x] **PLAT-02**: CI runs the behavior-lockdown suite on every pull request and push
-- [x] **PLAT-03**: Operators and contributors have a documented runbook for behavior-lockdown verification
+- [ ] **OBSX-01**: Metrics endpoint access can be restricted by explicit runtime configuration suitable for production deployment.
+- [ ] **OBSX-02**: Structured event sink lifecycle (path/retention/rotation expectations) is documented and verifiable through contributor commands.
+- [ ] **OBSX-03**: Event emission supports configurable sampling controls without breaking existing schema contracts.
 
-### Transport
+### Delivery and Compatibility
 
-- [x] **NET-01**: Async upstream fetch path can be enabled behind an explicit configuration flag
-- [x] **NET-02**: Async and legacy fetch paths can be compared with parity checks for status, headers, and body behavior
-- [x] **NET-03**: Legacy transport path remains immediately recoverable via configuration rollback
+- [ ] **DPLY-01**: Project ships deployable templates for standard host operation (systemd and container workflow).
+- [ ] **DPLY-02**: Upgrade-safe smoke verification workflow is documented and runnable by contributors.
+- [ ] **CI-01**: CI runs contract suites across a supported multi-version Python matrix.
 
-### Policy Engine
+### Operations and Runtime Safety
 
-- [x] **POL-01**: Redirector policy checks are decomposed into maintainable units without changing externally observable outcomes
-- [x] **POL-02**: Decision logic and action side effects are separated so policy outcomes are independently testable
-- [x] **POL-03**: Existing plugin interface behavior remains backward compatible for current deployments
-
-### Security Hardening
-
-- [x] **SEC-01**: Strict runtime mode enforces upstream TLS verification by default
-- [x] **SEC-02**: Strict runtime mode prevents unsafe listener/bind settings unless explicitly overridden
-- [x] **SEC-03**: Configuration validation fails fast on insecure or conflicting security options
-
-### Observability
-
-- [x] **OBS-01**: Structured logs emit stable fields for request outcome and reason code
-- [x] **OBS-02**: Metrics expose request totals, allow/drop counts by reason, upstream failure counts, and latency
-- [x] **OBS-03**: Operational telemetry supports incident triage without enabling verbose debug logging
+- [ ] **OPS-01**: Contributor runbooks include operator-deep triage and forensic collection steps for policy, transport, and observability incidents.
+- [ ] **OPS-02**: Incident evidence bundle procedure is documented with deterministic artifact expectations.
+- [ ] **SECX-01**: Strict runtime unsafe override controls support finer-grained per-check acknowledgement semantics.
+- [ ] **SECX-02**: Strict-mode migration guidance includes explicit remediation examples for each denied check.
 
 ## v2 Requirements
 
-### Configuration UX
+### Extensibility
 
-- **CFG-01**: Provide opinionated config profiles (safe-default, lab-debug, high-throughput)
-- **CFG-02**: Add guided migration hints when configuration schema evolves
+- **EXT-01**: Formal plugin capability/version compatibility metadata.
+- **EXT-02**: Stronger plugin isolation and execution boundary controls.
 
-### Delivery Ergonomics
+### Distributed Operations
 
-- **DPLY-01**: Publish container and service templates for standard deployment patterns
-- **DPLY-02**: Add packaging guidance for environment-specific operations
-
-### Advanced Extensibility
-
-- **EXT-01**: Formalize plugin capability/version compatibility metadata
-- **EXT-02**: Add stronger plugin isolation controls
+- **DIST-01**: Multi-node policy state distribution and coordination model.
+- **DIST-02**: Centralized fleet-level telemetry aggregation and retention controls.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Full language/runtime rewrite | High migration risk relative to near-term value |
-| New control-plane web UI | Not required to deliver core proxy modernization goals |
-| Cross-region distributed state control | Operationally heavy and not required for this milestone |
+| Runtime control-plane web UI | Not required to deliver v1.1 operational maturity goals |
+| Full protocol expansion beyond HTTP/HTTPS proxy | Current customer value is served by existing protocol scope |
+| Automatic rollback orchestration | Deferred until incident telemetry and deployment templates are hardened |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Complete |
-| PLAT-02 | Phase 1 | Complete |
-| PLAT-03 | Phase 1 | Complete |
-| NET-01 | Phase 2 | Complete |
-| NET-02 | Phase 2 | Complete |
-| NET-03 | Phase 2 | Complete |
-| POL-01 | Phase 3 | Complete |
-| POL-02 | Phase 3 | Complete |
-| POL-03 | Phase 3 | Complete |
-| SEC-01 | Phase 4 | Complete |
-| SEC-02 | Phase 4 | Complete |
-| SEC-03 | Phase 4 | Complete |
-| OBS-01 | Phase 5 | Complete |
-| OBS-02 | Phase 5 | Complete |
-| OBS-03 | Phase 5 | Complete |
+| OBSX-01 | Phase 6 | Pending |
+| OBSX-02 | Phase 6 | Pending |
+| OBSX-03 | Phase 6 | Pending |
+| DPLY-01 | Phase 7 | Pending |
+| DPLY-02 | Phase 7 | Pending |
+| CI-01 | Phase 7 | Pending |
+| OPS-01 | Phase 8 | Pending |
+| OPS-02 | Phase 8 | Pending |
+| SECX-01 | Phase 8 | Pending |
+| SECX-02 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 15 total
-- Mapped to phases: 15
+- v1.1 requirements: 10 total
+- Mapped to phases: 10
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after Phase 5 completion*
+*Requirements defined: 2026-02-26*
+*Last updated: 2026-02-26 after v1.1 kickoff*
