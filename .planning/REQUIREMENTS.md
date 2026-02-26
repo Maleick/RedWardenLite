@@ -12,8 +12,8 @@
 
 ### Distributed Operations
 
-- [ ] **DIST-01**: Multi-node policy state distribution and coordination model is implemented with deterministic convergence behavior.
-- [ ] **DIST-02**: Centralized fleet-level telemetry aggregation and retention controls are implemented with operational runbook guidance.
+- [x] **DIST-01**: Multi-node policy state distribution and coordination model is implemented with deterministic convergence behavior.
+- [x] **DIST-02**: Centralized fleet-level telemetry aggregation and retention controls are implemented with operational runbook guidance.
 
 ## Future Requirements
 
@@ -36,8 +36,8 @@
 |-------------|-------|--------|
 | EXT-01 | Phase 9 | Complete |
 | EXT-02 | Phase 9 | Complete |
-| DIST-01 | Phase 10 | Pending |
-| DIST-02 | Phase 10 | Pending |
+| DIST-01 | Phase 10 | Complete |
+| DIST-02 | Phase 10 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 4 total
@@ -46,4 +46,4 @@
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after Phase 9 completion*
+*Last updated: 2026-02-26 after Phase 10 completion*

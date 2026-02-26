@@ -8,12 +8,12 @@ v1.0 and v1.1 delivered a stable, operationally hardened proxy baseline. v2.0 fo
 
 - ✅ **v1.0 milestone** — Phases 1-5 shipped on 2026-02-25 ([archive roadmap](.planning/milestones/v1.0-ROADMAP.md), [archive requirements](.planning/milestones/v1.0-REQUIREMENTS.md))
 - ✅ **v1.1 operational maturity** — Phases 6-8 shipped on 2026-02-26 ([archive roadmap](.planning/milestones/v1.1-ROADMAP.md), [archive requirements](.planning/milestones/v1.1-REQUIREMENTS.md))
-- 🚧 **v2.0 extensibility + distributed operations** — Phases 9-10 (in progress; Phase 9 complete)
+- ✅ **v2.0 extensibility + distributed operations** — Phases 9-10 shipped on 2026-02-26
 
 ## Phases
 
 - [x] **Phase 9: Plugin Capability Contracts and Isolation Boundaries** - Formalize plugin compatibility metadata and strengthen plugin execution boundaries (completed 2026-02-26).
-- [ ] **Phase 10: Distributed Policy Coordination and Fleet Telemetry** - Add multi-node policy convergence and centralized telemetry aggregation controls.
+- [x] **Phase 10: Distributed Policy Coordination and Fleet Telemetry** - Add multi-node policy convergence and centralized telemetry aggregation controls (completed 2026-02-26).
 
 ## Phase Details
 
@@ -42,8 +42,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: Distributed policy state coordination model and verification harness
-- [ ] 10-02: Fleet telemetry aggregation contracts, retention controls, and runbook closure
+- [x] 10-01: Distributed policy state coordination model and verification harness
+- [x] 10-02: Fleet telemetry aggregation contracts, retention controls, and runbook closure
 
 ## Progress
 
@@ -58,4 +58,4 @@ Plans:
 | 7. Deployment Templates and Compatibility Matrix | 2/2 | Complete | 2026-02-26 |
 | 8. Operator Forensics and Runtime Override Refinement | 2/2 | Complete | 2026-02-26 |
 | 9. Plugin Capability Contracts and Isolation Boundaries | 2/2 | Complete | 2026-02-26 |
-| 10. Distributed Policy Coordination and Fleet Telemetry | 0/2 | Not started | - |
+| 10. Distributed Policy Coordination and Fleet Telemetry | 2/2 | Complete | 2026-02-26 |
