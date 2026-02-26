@@ -8,11 +8,11 @@ v1.0 and v1.1 delivered a stable, operationally hardened proxy baseline. v2.0 fo
 
 - ✅ **v1.0 milestone** — Phases 1-5 shipped on 2026-02-25 ([archive roadmap](.planning/milestones/v1.0-ROADMAP.md), [archive requirements](.planning/milestones/v1.0-REQUIREMENTS.md))
 - ✅ **v1.1 operational maturity** — Phases 6-8 shipped on 2026-02-26 ([archive roadmap](.planning/milestones/v1.1-ROADMAP.md), [archive requirements](.planning/milestones/v1.1-REQUIREMENTS.md))
-- 🚧 **v2.0 extensibility + distributed operations** — Phases 9-10 (in progress)
+- 🚧 **v2.0 extensibility + distributed operations** — Phases 9-10 (in progress; Phase 9 complete)
 
 ## Phases
 
-- [ ] **Phase 9: Plugin Capability Contracts and Isolation Boundaries** - Formalize plugin compatibility metadata and strengthen plugin execution boundaries.
+- [x] **Phase 9: Plugin Capability Contracts and Isolation Boundaries** - Formalize plugin compatibility metadata and strengthen plugin execution boundaries (completed 2026-02-26).
 - [ ] **Phase 10: Distributed Policy Coordination and Fleet Telemetry** - Add multi-node policy convergence and centralized telemetry aggregation controls.
 
 ## Phase Details
@@ -28,8 +28,8 @@ v1.0 and v1.1 delivered a stable, operationally hardened proxy baseline. v2.0 fo
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: Plugin capability metadata schema and compatibility validation path
-- [ ] 09-02: Plugin isolation boundary enforcement and contract verification
+- [x] 09-01: Plugin capability metadata schema and compatibility validation path
+- [x] 09-02: Plugin isolation boundary enforcement and contract verification
 
 ### Phase 10: Distributed Policy Coordination and Fleet Telemetry
 **Goal**: Provide deterministic fleet-level policy coordination and telemetry aggregation foundations.
@@ -57,5 +57,5 @@ Plans:
 | 6. Observability Access and Retention Hardening | 2/2 | Complete | 2026-02-26 |
 | 7. Deployment Templates and Compatibility Matrix | 2/2 | Complete | 2026-02-26 |
 | 8. Operator Forensics and Runtime Override Refinement | 2/2 | Complete | 2026-02-26 |
-| 9. Plugin Capability Contracts and Isolation Boundaries | 0/2 | Not started | - |
+| 9. Plugin Capability Contracts and Isolation Boundaries | 2/2 | Complete | 2026-02-26 |
 | 10. Distributed Policy Coordination and Fleet Telemetry | 0/2 | Not started | - |

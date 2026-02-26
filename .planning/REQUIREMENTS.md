@@ -7,8 +7,8 @@
 
 ### Extensibility
 
-- [ ] **EXT-01**: Formal plugin capability/version compatibility metadata is defined and enforced at load-time boundaries.
-- [ ] **EXT-02**: Plugin execution isolation and boundary controls are strengthened with deterministic failure semantics.
+- [x] **EXT-01**: Formal plugin capability/version compatibility metadata is defined and enforced at load-time boundaries.
+- [x] **EXT-02**: Plugin execution isolation and boundary controls are strengthened with deterministic failure semantics.
 
 ### Distributed Operations
 
@@ -34,8 +34,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EXT-01 | Phase 9 | Pending |
-| EXT-02 | Phase 9 | Pending |
+| EXT-01 | Phase 9 | Complete |
+| EXT-02 | Phase 9 | Complete |
 | DIST-01 | Phase 10 | Pending |
 | DIST-02 | Phase 10 | Pending |
 
@@ -46,4 +46,4 @@
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after v2.0 requirement definition*
+*Last updated: 2026-02-26 after Phase 9 completion*
