@@ -7,9 +7,9 @@
 
 ### Observability Hardening
 
-- [ ] **OBSX-01**: Metrics endpoint access can be restricted by explicit runtime configuration suitable for production deployment.
-- [ ] **OBSX-02**: Structured event sink lifecycle (path/retention/rotation expectations) is documented and verifiable through contributor commands.
-- [ ] **OBSX-03**: Event emission supports configurable sampling controls without breaking existing schema contracts.
+- [x] **OBSX-01**: Metrics endpoint access can be restricted by explicit runtime configuration suitable for production deployment.
+- [x] **OBSX-02**: Structured event sink lifecycle (path/retention/rotation expectations) is documented and verifiable through contributor commands.
+- [x] **OBSX-03**: Event emission supports configurable sampling controls without breaking existing schema contracts.
 
 ### Delivery and Compatibility
 
@@ -48,9 +48,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OBSX-01 | Phase 6 | Pending |
-| OBSX-02 | Phase 6 | Pending |
-| OBSX-03 | Phase 6 | Pending |
+| OBSX-01 | Phase 6 | Complete |
+| OBSX-02 | Phase 6 | Complete |
+| OBSX-03 | Phase 6 | Complete |
 | DPLY-01 | Phase 7 | Pending |
 | DPLY-02 | Phase 7 | Pending |
 | CI-01 | Phase 7 | Pending |
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after v1.1 kickoff*
+*Last updated: 2026-02-26 after Phase 6 completion*

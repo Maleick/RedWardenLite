@@ -11,7 +11,7 @@ v1.0 delivered the modernization baseline (contracts, parity, decomposition, har
 
 ## Phases
 
-- [ ] **Phase 6: Observability Access and Retention Hardening** - Add safe metrics exposure controls and production event lifecycle guidance
+- [x] **Phase 6: Observability Access and Retention Hardening** - Add safe metrics exposure controls and production event lifecycle guidance (completed 2026-02-26)
 - [ ] **Phase 7: Deployment Templates and Compatibility Matrix** - Ship repeatable deployment paths and multi-version CI coverage
 - [ ] **Phase 8: Operator Forensics and Runtime Override Refinement** - Add deep incident workflows and finer strict-mode safety controls
 
@@ -28,8 +28,8 @@ v1.0 delivered the modernization baseline (contracts, parity, decomposition, har
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Metrics access controls and event sink lifecycle contract updates
-- [ ] 06-02: Sampling controls, runbook integration, and verification closure
+- [x] 06-01: Metrics access controls and event sink lifecycle contract updates
+- [x] 06-02: Sampling controls, runbook integration, and verification closure
 
 ### Phase 7: Deployment Templates and Compatibility Matrix
 **Goal**: Make deployment and upgrade paths repeatable across supported environments.
@@ -68,6 +68,6 @@ Plans:
 | 3. Policy Engine Decomposition | 3/3 | Complete | 2026-02-25 |
 | 4. Runtime Hardening | 2/2 | Complete | 2026-02-25 |
 | 5. Observability Upgrade | 2/2 | Complete | 2026-02-25 |
-| 6. Observability Access and Retention Hardening | 0/2 | Not started | - |
+| 6. Observability Access and Retention Hardening | 2/2 | Complete | 2026-02-26 |
 | 7. Deployment Templates and Compatibility Matrix | 0/2 | Not started | - |
 | 8. Operator Forensics and Runtime Override Refinement | 0/2 | Not started | - |
