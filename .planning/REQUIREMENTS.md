@@ -13,9 +13,9 @@
 
 ### Delivery and Compatibility
 
-- [ ] **DPLY-01**: Project ships deployable templates for standard host operation (systemd and container workflow).
-- [ ] **DPLY-02**: Upgrade-safe smoke verification workflow is documented and runnable by contributors.
-- [ ] **CI-01**: CI runs contract suites across a supported multi-version Python matrix.
+- [x] **DPLY-01**: Project ships deployable templates for standard host operation (systemd and container workflow).
+- [x] **DPLY-02**: Upgrade-safe smoke verification workflow is documented and runnable by contributors.
+- [x] **CI-01**: CI runs contract suites across a supported multi-version Python matrix.
 
 ### Operations and Runtime Safety
 
@@ -51,9 +51,9 @@
 | OBSX-01 | Phase 6 | Complete |
 | OBSX-02 | Phase 6 | Complete |
 | OBSX-03 | Phase 6 | Complete |
-| DPLY-01 | Phase 7 | Pending |
-| DPLY-02 | Phase 7 | Pending |
-| CI-01 | Phase 7 | Pending |
+| DPLY-01 | Phase 7 | Complete |
+| DPLY-02 | Phase 7 | Complete |
+| CI-01 | Phase 7 | Complete |
 | OPS-01 | Phase 8 | Pending |
 | OPS-02 | Phase 8 | Pending |
 | SECX-01 | Phase 8 | Pending |
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after Phase 6 completion*
+*Last updated: 2026-02-26 after Phase 7 completion*

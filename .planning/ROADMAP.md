@@ -12,7 +12,7 @@ v1.0 delivered the modernization baseline (contracts, parity, decomposition, har
 ## Phases
 
 - [x] **Phase 6: Observability Access and Retention Hardening** - Add safe metrics exposure controls and production event lifecycle guidance (completed 2026-02-26)
-- [ ] **Phase 7: Deployment Templates and Compatibility Matrix** - Ship repeatable deployment paths and multi-version CI coverage
+- [x] **Phase 7: Deployment Templates and Compatibility Matrix** - Ship repeatable deployment paths and multi-version CI coverage (completed 2026-02-26)
 - [ ] **Phase 8: Operator Forensics and Runtime Override Refinement** - Add deep incident workflows and finer strict-mode safety controls
 
 ## Phase Details
@@ -42,8 +42,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: Deployment template package (systemd + container baseline)
-- [ ] 07-02: Multi-version CI and upgrade smoke verification
+- [x] 07-01: Deployment template package (systemd + container baseline)
+- [x] 07-02: Multi-version CI and upgrade smoke verification
 
 ### Phase 8: Operator Forensics and Runtime Override Refinement
 **Goal**: Improve incident response depth and strict-mode operational ergonomics.
@@ -69,5 +69,5 @@ Plans:
 | 4. Runtime Hardening | 2/2 | Complete | 2026-02-25 |
 | 5. Observability Upgrade | 2/2 | Complete | 2026-02-25 |
 | 6. Observability Access and Retention Hardening | 2/2 | Complete | 2026-02-26 |
-| 7. Deployment Templates and Compatibility Matrix | 0/2 | Not started | - |
+| 7. Deployment Templates and Compatibility Matrix | 2/2 | Complete | 2026-02-26 |
 | 8. Operator Forensics and Runtime Override Refinement | 0/2 | Not started | - |
