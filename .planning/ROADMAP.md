@@ -7,13 +7,13 @@ v1.0 delivered the modernization baseline (contracts, parity, decomposition, har
 ## Milestones
 
 - ✅ **v1.0 milestone** — Phases 1-5 shipped on 2026-02-25 ([archive roadmap](.planning/milestones/v1.0-ROADMAP.md), [archive requirements](.planning/milestones/v1.0-REQUIREMENTS.md))
-- 🚧 **v1.1 operational maturity** — Phases 6-8 (in progress)
+- ✅ **v1.1 operational maturity** — Phases 6-8 shipped on 2026-02-26
 
 ## Phases
 
 - [x] **Phase 6: Observability Access and Retention Hardening** - Add safe metrics exposure controls and production event lifecycle guidance (completed 2026-02-26)
 - [x] **Phase 7: Deployment Templates and Compatibility Matrix** - Ship repeatable deployment paths and multi-version CI coverage (completed 2026-02-26)
-- [ ] **Phase 8: Operator Forensics and Runtime Override Refinement** - Add deep incident workflows and finer strict-mode safety controls
+- [x] **Phase 8: Operator Forensics and Runtime Override Refinement** - Add deep incident workflows and finer strict-mode safety controls (completed 2026-02-26)
 
 ## Phase Details
 
@@ -56,8 +56,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Incident forensics workflow and evidence bundle procedure
-- [ ] 08-02: Runtime override granularity and remediation UX updates
+- [x] 08-01: Incident forensics workflow and evidence bundle procedure
+- [x] 08-02: Runtime override granularity and remediation UX updates
 
 ## Progress
 
@@ -70,4 +70,4 @@ Plans:
 | 5. Observability Upgrade | 2/2 | Complete | 2026-02-25 |
 | 6. Observability Access and Retention Hardening | 2/2 | Complete | 2026-02-26 |
 | 7. Deployment Templates and Compatibility Matrix | 2/2 | Complete | 2026-02-26 |
-| 8. Operator Forensics and Runtime Override Refinement | 0/2 | Not started | - |
+| 8. Operator Forensics and Runtime Override Refinement | 2/2 | Complete | 2026-02-26 |

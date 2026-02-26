@@ -19,10 +19,10 @@
 
 ### Operations and Runtime Safety
 
-- [ ] **OPS-01**: Contributor runbooks include operator-deep triage and forensic collection steps for policy, transport, and observability incidents.
-- [ ] **OPS-02**: Incident evidence bundle procedure is documented with deterministic artifact expectations.
-- [ ] **SECX-01**: Strict runtime unsafe override controls support finer-grained per-check acknowledgement semantics.
-- [ ] **SECX-02**: Strict-mode migration guidance includes explicit remediation examples for each denied check.
+- [x] **OPS-01**: Contributor runbooks include operator-deep triage and forensic collection steps for policy, transport, and observability incidents.
+- [x] **OPS-02**: Incident evidence bundle procedure is documented with deterministic artifact expectations.
+- [x] **SECX-01**: Strict runtime unsafe override controls support finer-grained per-check acknowledgement semantics.
+- [x] **SECX-02**: Strict-mode migration guidance includes explicit remediation examples for each denied check.
 
 ## v2 Requirements
 
@@ -54,10 +54,10 @@
 | DPLY-01 | Phase 7 | Complete |
 | DPLY-02 | Phase 7 | Complete |
 | CI-01 | Phase 7 | Complete |
-| OPS-01 | Phase 8 | Pending |
-| OPS-02 | Phase 8 | Pending |
-| SECX-01 | Phase 8 | Pending |
-| SECX-02 | Phase 8 | Pending |
+| OPS-01 | Phase 8 | Complete |
+| OPS-02 | Phase 8 | Complete |
+| SECX-01 | Phase 8 | Complete |
+| SECX-02 | Phase 8 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 10 total
@@ -66,4 +66,4 @@
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after Phase 7 completion*
+*Last updated: 2026-02-26 after Phase 8 completion*
