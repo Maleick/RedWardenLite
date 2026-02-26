@@ -25,3 +25,29 @@
 - `.planning/milestones/v1.0-REQUIREMENTS.md`
 
 ---
+
+## v1.1 Milestone (Shipped: 2026-02-26)
+
+**Delivered:** Operational maturity hardening was completed across observability access controls, deployment repeatability, compatibility matrix coverage, and operator forensics/runtime override refinement.
+
+**Phases completed:** 6-8 (6 plans total)
+
+**Key accomplishments:**
+- Hardened metrics/event observability controls with deterministic sampling and lifecycle guidance.
+- Added deployable systemd/container templates and upgrade-safe smoke workflow.
+- Expanded CI to multi-version Python compatibility gates.
+- Added deterministic operator forensics workflows and evidence bundle contracts.
+- Added per-check strict-mode unsafe acknowledgement semantics with remediation guidance.
+
+**Stats:**
+- 35 files changed, 3360 insertions, 185 deletions
+- 3 phases, 6 plans, 18 tasks
+- Timeline: 2026-02-25 19:10 -0600 to 2026-02-26 10:50 -0600
+
+**Git range:** `8871fed` -> `ddc9131`
+
+**Archives:**
+- `.planning/milestones/v1.1-ROADMAP.md`
+- `.planning/milestones/v1.1-REQUIREMENTS.md`
+
+---

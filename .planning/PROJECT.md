@@ -2,7 +2,7 @@
 
 ## What This Is
 
-RedWardenLite is a Python/Tornado HTTP/HTTPS reverse proxy that filters, redirects, or proxies traffic through policy decisions with auditable reason codes. The codebase now has locked behavior contracts, transport parity checks, runtime hardening, and structured observability from milestone v1.0.
+RedWardenLite is a Python/Tornado HTTP/HTTPS reverse proxy that enforces request policy decisions with auditable reason/action outcomes. The platform now has locked behavior contracts, transport parity controls, runtime hardening, and deterministic observability/forensics guidance.
 
 ## Core Value
 
@@ -12,46 +12,42 @@ Legitimate traffic must pass reliably while non-conformant or suspicious traffic
 
 ### Validated
 
-- ✓ Policy reason-code and side-effect behavior contracts with deterministic CI gates — v1.0
-- ✓ Async transport parity framework with fallback and artifacts — v1.0
-- ✓ Internal policy engine decomposition with compatibility facade — v1.0
-- ✓ Runtime hardening profile and startup validation UX — v1.0
-- ✓ Structured observability events and Prometheus metrics contracts — v1.0
+- ✓ v1.0 modernization baseline (policy contracts, async parity, policy decomposition, runtime hardening, observability contracts)
+- ✓ v1.1 operational maturity baseline (observability hardening, deployment templates, compatibility matrix, operator forensics, strict override refinement)
 
 ### Active
 
-- [ ] Protect observability surfaces (metrics access and event handling) for production-grade operation
-- [ ] Add repeatable deployment templates and upgrade-safe operational packaging
-- [ ] Expand CI compatibility matrix across supported Python versions
-- [ ] Add operator-deep incident/forensic workflows built on telemetry outputs
-- [ ] Refine strict-mode override ergonomics with finer-grained safety controls
+- [ ] Publish formal plugin capability/version compatibility contracts and validation flow.
+- [ ] Introduce stronger plugin execution isolation and boundary controls.
+- [ ] Define deterministic multi-node policy state distribution and coordination model.
+- [ ] Add centralized fleet-level telemetry aggregation and retention controls.
 
 ### Out of Scope
 
-- Full rewrite into a new runtime/language — maintain Python/Tornado compatibility path
-- External control-plane/UI productization — focus remains core proxy runtime and operator workflows
-- Distributed multi-node orchestration in this milestone — single-node operational maturity first
+- Runtime control-plane web UI productization — milestone focus remains runtime contracts and operator workflows.
+- Full protocol expansion beyond HTTP/HTTPS proxy — current customer value remains within existing protocol scope.
+- Automatic rollback orchestration — deferred until distributed operations controls are in place.
 
 ## Context
 
-Milestone v1.0 closed all planned phases (1-5) and established a stable baseline of automated verification (`67` tests passing). The next milestone targets operational maturity: safer exposure of telemetry, deployment standardization, broader runtime compatibility validation, and deeper operator runbooks. Existing artifacts in `.planning/milestones/` are the historical source of v1.0 decisions and scope.
+Milestones v1.0 and v1.1 are complete and archived in `.planning/milestones/`. The next cycle (v2.0) focuses on extensibility contracts and distributed operations maturity, while preserving backward-compatible proxy behavior and deterministic verification gates.
 
 ## Constraints
 
-- **Tech stack**: Python/Tornado remains the runtime baseline — avoid disruptive stack churn.
-- **Compatibility**: External proxy behavior and policy ordering must remain stable unless explicitly versioned.
+- **Tech stack**: Python/Tornado runtime remains baseline — avoid disruptive stack migration.
+- **Compatibility**: External proxy behavior and policy ordering must stay stable unless explicitly versioned.
 - **Operational safety**: No secrets in planning artifacts, prompts, logs, or generated docs.
-- **Delivery pace**: Keep incremental phase-scoped changes with deterministic verification gates.
+- **Delivery pace**: Keep incremental phase-scoped changes with deterministic verification and CI hard gates.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Incremental brownfield modernization over rewrite | Existing deployed behavior has value and rewrite risk is high | ✓ Good |
-| Behavior-lockdown before major refactors | Prevent regressions while decoupling core modules | ✓ Good |
-| Async transport parity before removal of legacy internals | Preserve response contract safety during transport evolution | ✓ Good |
-| Strict runtime profile as opt-in first | Reduce rollout risk while introducing hardening controls | ✓ Good |
-| v1.1 focus on operational maturity and deployability | Baseline behavior is stable; next risk is operations lifecycle | — Pending |
+| Behavior-lockdown before major refactors | Prevent regressions while decoupling internals | ✓ Good |
+| Runtime hardening opt-in before strict-by-default | Reduce rollout risk while introducing safety controls | ✓ Good |
+| v1.1 focused on operational maturity | Baseline behavior stability exposed ops/deploy gaps as highest risk | ✓ Good |
+| v2.0 will target extensibility + distributed operations | Next growth risk is plugin/fleet scale, not core policy correctness | — Pending |
 
 ---
-*Last updated: 2026-02-26 after v1.0 milestone completion and v1.1 kickoff*
+*Last updated: 2026-02-26 after v2.0 milestone kickoff*
