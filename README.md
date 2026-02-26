@@ -6,6 +6,30 @@ Unlike the original RedWarden project, which is designed to work with specific a
 
 Several tests were made against traffic originating from different web browsers and both desktop and web applications.
 
+## Project Status (Updated: 2026-02-26)
+
+RedWardenLite is currently at **v2.0 (shipped)** with milestone work completed across behavior contracts, transport parity, runtime hardening, observability, plugin compatibility, and distributed operations contracts.
+
+- Milestone archive: [.planning/milestones/v2.0-ROADMAP.md](.planning/milestones/v2.0-ROADMAP.md)
+- Requirements archive: [.planning/milestones/v2.0-REQUIREMENTS.md](.planning/milestones/v2.0-REQUIREMENTS.md)
+- Full milestone history: [.planning/MILESTONES.md](.planning/MILESTONES.md)
+
+### Added Contracted Capabilities
+- Behavior-lockdown reason/action contract suites and hard CI gates.
+- Async upstream transport mode (`legacy|async|auto`) with parity comparison and rollback path.
+- Runtime hardening profile controls (`compatible|strict`) with startup validation.
+- Structured observability (JSONL request events) and Prometheus metrics at `/metrics`.
+- Plugin compatibility metadata and isolation boundaries.
+- Distributed policy coordination and fleet telemetry aggregation contracts.
+
+### Runbooks
+- [Behavior Lockdown](docs/testing-behavior-lockdown.md)
+- [Async Transport Parity](docs/async-transport-parity.md)
+- [Runtime Hardening](docs/runtime-hardening.md)
+- [Observability Upgrade](docs/observability-upgrade.md)
+- [Plugin Contracts](docs/plugin-contracts.md)
+- [Distributed Operations](docs/distributed-operations.md)
+- [Operator Forensics](docs/operator-forensics.md)
 
 ![Process](resources/redwarden-lite.jpg?raw=true "Process")
 
@@ -54,7 +78,7 @@ policy:
 3. Run the command: `python RedWardenLite.py -c example-config.yaml`
 
 * The application will keep running in the background; you may use screen or tmux to manage this.
-* Tested on Ubuntu 18.04 (LTS) x64 with Python 3.8.3
+* CI contract gates run on Python `3.10`, `3.11`, and `3.12` on push + pull request.
 
 
 
