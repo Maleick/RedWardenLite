@@ -51,3 +51,29 @@
 - `.planning/milestones/v1.1-REQUIREMENTS.md`
 
 ---
+
+## v2.0 Milestone (Shipped: 2026-02-26)
+
+**Delivered:** Extensibility and distributed-operations contracts were shipped with deterministic plugin compatibility/isolation boundaries and fleet-level coordination/telemetry workflows.
+
+**Phases completed:** 9-10 (4 plans total)
+
+**Key accomplishments:**
+- Added formal plugin metadata schema and load-time API compatibility validation.
+- Added deterministic plugin runtime isolation controls (`fail_closed`/`fail_open`) and CI contract gates.
+- Added deterministic distributed policy convergence model with retention-managed artifacts.
+- Added deterministic fleet telemetry aggregation and retention snapshot contracts.
+- Added contributor runbooks for plugin contracts and distributed operations workflows.
+
+**Stats:**
+- 31 files changed, 2056 insertions, 128 deletions
+- 2 phases, 4 plans, 12 tasks
+- Timeline: 2026-02-26 11:02 -0600 to 2026-02-26 11:43 -0600
+
+**Git range:** `f582a5d` -> `c82a1fa`
+
+**Archives:**
+- `.planning/milestones/v2.0-ROADMAP.md`
+- `.planning/milestones/v2.0-REQUIREMENTS.md`
+
+---
