@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: operational maturity
-status: complete
-last_updated: "2026-02-26T16:50:00Z"
+milestone: v2.0
+milestone_name: extensibility-and-distributed-operations
+status: active
+last_updated: "2026-02-26T17:00:50Z"
 progress:
-  total_phases: 8
+  total_phases: 10
   completed_phases: 8
-  total_plans: 18
+  total_plans: 22
   completed_plans: 18
 ---
 
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Legitimate traffic must pass reliably while non-conformant or suspicious traffic is blocked predictably with auditable policy reasons.
-**Current focus:** v1.1 milestone closure complete
+**Current focus:** Phase 9 — Plugin Capability Contracts and Isolation Boundaries
 
 ## Current Position
 
-Phase: 8 of 8 (Operator Forensics and Runtime Override Refinement)
-Plan: 2 of 2 in current phase
-Status: Phase 8 complete
-Last activity: 2026-02-26 — Phase 8 completed and verified
+Phase: 9 of 10 (Plugin Capability Contracts and Isolation Boundaries)
+Plan: 0 of 2 in current phase
+Status: Ready to discuss
+Last activity: 2026-02-26 — Milestone v2.0 started
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 18
 - Average duration: -
 - Total execution time: -
 
@@ -56,12 +56,10 @@ Progress: [██████████] 100%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- v1.0 archived with roadmap and requirements snapshots in `.planning/milestones/`
-- v1.1 scope targets operational maturity (observability hardening, deployability, compatibility, forensics)
-- Phase numbering continues from 6 to preserve historical continuity
-- Phase 6 delivered observability access controls, deterministic sampling, and lifecycle runbook guidance
-- Phase 7 delivered deployment templates, upgrade smoke workflow, and multi-version CI matrix
-- Phase 8 delivered deterministic operator forensics runbook flows and per-check strict override acknowledgement controls
+- v1.0 and v1.1 milestones are complete and archived in `.planning/milestones/`
+- v2.0 scope is restricted to extensibility contracts and distributed operations
+- Phase numbering continues from 9 to preserve historical continuity
+- Existing behavior/policy/transport contracts remain compatibility gates during v2.0
 
 ### Pending Todos
 
@@ -73,6 +71,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26 16:50Z
-Stopped at: Phase 8 complete
-Resume file: .planning/phases/08-operator-forensics-and-runtime-override-refinement/08-VERIFICATION.md
+Last session: 2026-02-26 17:00Z
+Stopped at: Milestone v2.0 initialized
+Resume file: .planning/ROADMAP.md
