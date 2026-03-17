@@ -30,7 +30,7 @@ def parse_options(opts, version):
     parser.add_argument("-d", "--debug", dest='debug',
                         help="Displays debugging informations (implies verbose output).", action="store_true")
     parser.add_argument("-s", "--silent", dest='silent',
-                        help="Surpresses all of the output logging.", action="store_true")
+                        help="Suppresses all of the output logging.", action="store_true")
     parser.add_argument("-z", "--allow-invalid", dest='allow_invalid',
                         help="Process invalid HTTP requests. By default if a stream not resembling HTTP protocol reaches RedWardenLite listener - it will be dropped.",
                         action="store_true")
@@ -443,7 +443,7 @@ def parseParametersFromConfigFile(_params):
             try:
                 config = yaml.load(f, Loader=yaml.FullLoader)
             except Exception as e:
-                self.logger.fatal(f'Could not parse {f} YAML file:\n\n{e}\n\n')
+                raise Exception(f'Could not parse YAML config file:\n\n{e}\n\n')
 
         outparams.update(config)
 
@@ -489,7 +489,7 @@ def parseParametersFromConfigFile(_params):
         raise Exception(f'RedWardenLite config file not found: ({outparams["config"]})!')
 
     except Exception as e:
-        raise Exception(f'Unhandled exception occured while parsing RedWardenLite config file: {e}')
+        raise Exception(f'Unhandled exception occurred while parsing RedWardenLite config file: {e}')
 
     return outparams
 

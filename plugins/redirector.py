@@ -19,6 +19,7 @@ import fnmatch
 BANNED_AGENTS = []
 OVERRIDE_BANNED_AGENTS = []
 alreadyPrintedPeers = set()
+MAX_PRINTED_PEERS = 10000
 
 
 class ProxyPlugin(IProxyPlugin):
@@ -532,7 +533,7 @@ class ProxyPlugin(IProxyPlugin):
             _ts = ts.split(':')
             inport = int(_ts[0])
             ts = ':'.join(_ts[1:])
-        except:
+        except Exception:
             pass
 
         u = urlparse(ts)
@@ -785,7 +786,7 @@ class ProxyPlugin(IProxyPlugin):
         try:
             resolved = socket.gethostbyaddr(req.client_address[0])[0]
             peer += ' ({})'.format(resolved)
-        except:
+        except Exception:
             pass
 
         if not quiet:
@@ -964,7 +965,7 @@ The document has moved
                     reverseIp = ''
                     try:
                         reverseIp = socket.gethostbyaddr(peerIP)[0]
-                    except:
+                    except Exception:
                         pass
 
                     blockAnyway = True
@@ -1252,7 +1253,7 @@ The document has moved
 
                 except Exception as e:
                     self.logger.dbg(
-                        f"Exception was thrown during drop_ipgeo_metadata_containing_banned_keywords verifcation:\n\t({e})")
+                        f"Exception was thrown during drop_ipgeo_metadata_containing_banned_keywords verification:\n\t({e})")
 
         if returnJson:
             msg = '[ALLOW, {}, reason:99, {}] Peer IP and HTTP headers did not contain anything suspicious.'.format(
@@ -1308,7 +1309,8 @@ The document has moved
 
             for header in self.proxyOptions['expected_headers_value'].items():
                 k, v = header
-                match = req.headers[k.lower()].lower() == v.lower()
+                header_value = req.headers.get(k, '')
+                match = header_value.lower() == v.lower()
 
                 if not match:
                     drop = True
@@ -1486,6 +1488,8 @@ The document has moved
                 printit('Here is what we know about that address ({}): ({})'.format(peerIP, ipLookupDetails),
                         color='grey')
                 alreadyPrintedPeers.add(peerIP)
+                if len(alreadyPrintedPeers) > MAX_PRINTED_PEERS:
+                    alreadyPrintedPeers.clear()
 
                 return ipLookupDetails
         except Exception as e:

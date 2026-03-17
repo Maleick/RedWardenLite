@@ -8,7 +8,6 @@
 
 ## Current Status
 
-No active milestone roadmap is open.
+**Active milestone: v3.0 — Refinement & Optimization** (Phases 11-13)
 
-Next action:
-- Run `$gsd-new-milestone` to define the next milestone requirements and phases.
+See: [v3.0 Roadmap](.planning/milestones/v3.0-ROADMAP.md)

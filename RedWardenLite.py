@@ -216,8 +216,20 @@ def main():
             try:
                 _port = port
 
-                if type(port) == int:
+                if isinstance(port, int):
                     bind = options['bind']
+                    is_ssl = False
+                    if bind.startswith('https://'):
+                        is_ssl = True
+                        bind = bind.replace('https://', '').replace('/', '')
+                    elif bind.startswith('http://'):
+                        bind = bind.replace('http://', '').replace('/', '')
+                    p = port
+                    if not bind:
+                        bind = '0.0.0.0'
+                    foosock = tornado.netutil.bind_sockets(p, address=bind)
+                    servers.append((bind, p, is_ssl, foosock, options))
+                    continue
 
                 if ':' in port:
                     bind, port = _port.split(':')
@@ -236,12 +248,10 @@ def main():
             except OSError as e:
                 logger.err('Could not bind to specified TCP port: {}\nException: {}\n'.format(port, e))
                 raise
-                return False
 
             except Exception as e:
                 logger.err('Specified port ({}) is not a valid number in range of 1-65535!\n'.format(port))
                 raise
-                return False
 
         # https://www.tornadoweb.org/en/stable/tcpserver.html
         # advanced multi-process:
@@ -256,7 +266,7 @@ def main():
         logger.info('\nProxy serving interrupted by user.', noprefix=True)
 
     except Exception as e:
-        print(ProxyLogger.with_color(ProxyLogger.colors_map['red'], 'Fatal error has occured.'))
+        print(ProxyLogger.with_color(ProxyLogger.colors_map['red'], 'Fatal error has occurred.'))
         print(ProxyLogger.with_color(ProxyLogger.colors_map['red'], '\t%s\nTraceback:' % e))
         print(ProxyLogger.with_color(ProxyLogger.colors_map['red'], '-'*30))
         traceback.print_exc()

@@ -63,6 +63,8 @@ def putheader_decorator(method):
 
 
 def send_request_decorator(method):
+    _xhdrs_lower = frozenset(x.lower() for x in plugins.IProxyPlugin.proxy2_metadata_headers.values())
+
     def new_send_request(self, _method, url, body, headers, encode_chunked):
         strips = ''
         headers2 = {}
@@ -93,7 +95,7 @@ def send_request_decorator(method):
         headers3 = {}
 
         for k, v in headers.items():
-            if k.lower().startswith('x-proxy2-'): continue
+            if k.lower() in _xhdrs_lower: continue
             if v == drop_this_header: continue
             headers3[k] = v
 

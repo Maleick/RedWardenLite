@@ -400,3 +400,4 @@ DotfuscatorConfig.xmle
 dll/
 .DS_Store
 .python-version
+.bg-shell/

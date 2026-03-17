@@ -66,12 +66,16 @@ sslintercept = None
 options = {}
 
 
+# Pre-computed lowercase set of proxy metadata headers for hot-path lookups
+_PROXY2_METADATA_HEADERS_LOWER = frozenset(
+    x.lower() for x in plugins.IProxyPlugin.proxy2_metadata_headers.values()
+)
+
+
 class RemoveXProxy2HeadersTransform(tornado.web.OutputTransform):
     def transform_first_chunk(self, status_code, headers, chunk, finishing):
-        xhdrs = [x.lower() for x in plugins.IProxyPlugin.proxy2_metadata_headers.values()]
-
         for k, v in headers.items():
-            if k.lower() in xhdrs:
+            if k.lower() in _PROXY2_METADATA_HEADERS_LOWER:
                 headers.pop(k)
 
         return status_code, headers, chunk
@@ -102,6 +106,10 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
     SUPPORTED_METHODS = tornado.web.RequestHandler.SUPPORTED_METHODS + ('PROPFIND', 'CONNECT')
     SUPPORTED_ENCODINGS = ('gzip', 'x-gzip', 'identity', 'deflate', 'br')
 
+    # Cached IP resolution — computed once at class level, not per-request
+    _cached_ip = None
+    _cached_all_addresses = None
+
     def __init__(self, *args, **kwargs):
         global pluginsloaded
 
@@ -111,7 +119,10 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self.logger.options.update(self.options)
 
         self.plugins = pluginsloaded.get_plugins()
-        self.server_address, self.all_server_addresses = ProxyRequestHandler.get_ip()
+        if ProxyRequestHandler._cached_ip is None:
+            ProxyRequestHandler._cached_ip, ProxyRequestHandler._cached_all_addresses = ProxyRequestHandler.get_ip()
+        self.server_address = ProxyRequestHandler._cached_ip
+        self.all_server_addresses = ProxyRequestHandler._cached_all_addresses
 
         for name, plugin in self.plugins.items():
             plugin.logger = logger
@@ -141,7 +152,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             # doesn't even have to be reachable
             s.connect(('10.255.255.255', 1))
             IP = s.getsockname()[0]
-        except:
+        except Exception:
             IP = '127.0.0.1'
         finally:
             s.close()
@@ -149,17 +160,14 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         return (IP, all_addresses)
 
     def log_message(self, format, *args):
-        if (self.options['verbose'] or  self.options['debug']) or (type(self.options['log']) == str and self.options['log'] != 'none'):
-            txt = "%s - - [%s] %s\n" % \
-                  (self.address_string(),
-                   self.log_date_time_string(),
-                   format % args)
-
+        if (self.options['verbose'] or self.options['debug']) or (type(self.options['log']) == str and self.options['log'] != 'none'):
+            remote_ip = getattr(self.request, 'remote_ip', '-')
+            txt = "%s - - %s\n" % (remote_ip, format % args)
             self.logger.out(txt, self.options['log'], '')
 
     def log_error(self, format, *args):
-        # Surpress "Request timed out: timeout('timed out',)" if not in debug mode.
-        if isinstance(args[0], socket.timeout) and not self.options['debug']:
+        # Suppress "Request timed out: timeout('timed out',)" if not in debug mode.
+        if args and isinstance(args[0], socket.timeout) and not self.options['debug']:
             return
 
         if not options['debug']:
@@ -190,7 +198,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             for k, v in req.headers.items():
                 if not readable(k): return False
                 if not readable(v): return False
-        except:
+        except Exception:
             return False
 
         return True
@@ -201,7 +209,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         stdout = stderr = ''
 
         if not os.path.isfile(certpath):
-            self.logger.dbg('Generating valid SSL certificate for ({})...'.format(hostname))
+            logger.dbg('Generating valid SSL certificate for ({})...'.format(hostname))
             epoch = "%d" % (time.time() * 1000)
 
             # Workaround for the Windows' RANDFILE bug
@@ -253,7 +261,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 certfile=certpath,
                 server_side=True
             ))
-        except:
+        except Exception:
             self.logger.err('Connection reset by peer: "{}"'.format(self.request.uri))
             self._send_error(502)
             return
@@ -283,7 +291,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         conns = [self.request.connection.stream, s]
         self.request.connection.no_keep_alive = False
 
-        while not self.close_connection:
+        while not self.request.connection.no_keep_alive:
             rlist, wlist, xlist = select.select(conns, [], conns, self.options['timeout'])
             if xlist or not rlist:
                 break
@@ -297,7 +305,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
 
     def reverse_proxy_loop_detected(self, command, fetchurl, req_body):
         self.logger.err('[Reverse-proxy loop detected from peer {}] {} {}'.format(
-            self.client_address[0], command, fetchurl
+            self.request.client_address[0], command, fetchurl
         ))
 
         self._send_error(500)
@@ -448,6 +456,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 fetch_context['headers'],
                 fetch_context['timeout'],
                 fetch_context['ignore_decompression'],
+                fetch_context.get('verify_upstream_tls', False),
             )
         except Exception as exc:
             self.logger.err(
@@ -508,123 +517,86 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 )
             )
 
+    def _format_access_log(self, timestamp, remote_host, request_line):
+        """Format and emit the access log line. Returns override_suppress_log flag."""
+        user_identity = '-'
+        http_basic_auth = '-'
+
+        auth = self.request.headers.get('Authorization', '')
+        if auth:
+            if auth.lower().startswith('basic '):
+                try:
+                    auth_decoded = base64.b64decode(auth[len('Basic '):])
+                    if ':' in auth_decoded:
+                        http_basic_auth = auth_decoded.split(':')[0]
+                except Exception:
+                    pass
+
+        tz = '+0000'
+        month = timestamp.strftime('%b')
+        request_timestamp = f'[{timestamp.day:02}/{month}/{timestamp.year:04}:{timestamp.hour:02}:{timestamp.minute:02}:{timestamp.second:02} {tz}]'
+        http_referer = self.request.headers.get('Referer', '-') or '-'
+        http_useragent = self.request.headers.get('User-Agent', '-') or '-'
+
+        line = ''
+        override_suppress_log = False
+        log_format = (self.options.get('access_log_format') or 'apache2').lower()
+
+        if log_format == 'apache2':
+            line = f'{remote_host} {user_identity} {http_basic_auth} {request_timestamp} "{request_line}" {self.response_status} {self.response_length} "{http_referer}" "{http_useragent}"'
+
+        elif log_format == 'redelk':
+            hostname = socket.gethostname()
+            pid = os.getpid()
+            frontend_name = self.options.get('redelk_frontend_name', 'http-redwarden')
+            backend_name_c2 = self.options.get('redelk_backend_name_c2', 'c2')
+            backend_name_decoy = self.options.get('redelk_backend_name_decoy', 'decoy')
+
+            local_address = socket.gethostbyname(socket.gethostname())
+            local_port = self.request.server_port
+            x_forwarded_for = self.request.headers.get('X-Forwarded-For', '-')
+
+            hdr_host = self.request.headers.get('Host', '-')
+            hdr_xforwardedproto = self.request.headers.get('X-Forwarded-Proto', '-')
+            hdr_xhost = self.request.headers.get('X-Host', '-')
+            hdr_forwarded = self.request.headers.get('Forwarded', '-')
+            hdr_via = self.request.headers.get('Via', '-')
+            headers_string = f"{http_useragent}|{hdr_host}|{x_forwarded_for}|{hdr_xforwardedproto}|{hdr_xhost}|{hdr_forwarded}|{hdr_via}|"
+
+            try:
+                remote_host_port = self.request.connection.stream.socket.getpeername()[1]
+            except Exception:
+                remote_host_port = 0
+
+            backend_name = backend_name_c2 if self.request.redirected_to_c2 else backend_name_decoy
+            line = f'{request_timestamp} {hostname} apache[{pid}]: frontend:{frontend_name}/{local_address}:{local_port} backend:{backend_name} client:{remote_host}:{remote_host_port} xforwardedfor:{x_forwarded_for} headers:{{{headers_string}}} statuscode:{self.response_status} request:{request_line}'
+            override_suppress_log = True
+
+        access_log = self.options.get('access_log', '')
+        if access_log:
+            if not self.request.suppress_log_entry or override_suppress_log:
+                with open(access_log, 'a') as f:
+                    f.write(line + '\n')
+
+        if not self.request.suppress_log_entry:
+            print(line)
+
     async def my_handle_request(self, *args, **kwargs):
-        # http://httpd.apache.org/docs/current/logs.html#combined
-        # [day/month/year:hour:minute:second zone]
-        # day = 2*digit
-        # month = 3*letter
-        # year = 4*digit
-        # hour = 2*digit
-        # minute = 2*digit
-        # second = 2*digit
-        # zone = (`+' | `-') 4*digit
         timestamp = datetime.utcnow()
         started_at = time.monotonic()
 
-        if hasattr(self, 'request') and hasattr(self.request, 'uri') and type(self.request.uri) == str:
+        if hasattr(self, 'request') and hasattr(self.request, 'uri') and isinstance(self.request.uri, str):
             if self.request.uri.startswith('//'):
                 self.request.uri = self.request.uri[1:]
 
         await self._internal_my_handle_request(*args, **kwargs)
 
         remote_host = self.request.client_address
-        if (type(self.request.client_address) == list or type(self.request.client_address) == tuple) and len(
-                self.request.client_address) > 0:
+        if isinstance(self.request.client_address, (list, tuple)) and len(self.request.client_address) > 0:
             remote_host = self.request.client_address[0]
 
-        user_identity = '-'
-        http_basic_auth = '-'
-
-        if len(self.request.headers.get('Authorization', '')) > 0:
-            auth = self.request.headers.get('Authorization', '').strip()
-            if auth.lower().startswith('basic '):
-                try:
-                    auth_decoded = base64.b64decode(auth[len('Basic '):])
-                    if ':' in auth_decoded:
-                        http_basic_auth = auth_decoded.split(':')[0]
-                except:
-                    pass
-
-        timezone = '+0000'
-        month = timestamp.strftime('%b')
-        request_timestamp = f'[{timestamp.day:02}/{month}/{timestamp.year:04}:{timestamp.hour:02}:{timestamp.minute:02}:{timestamp.second:02} {timezone}]'
         request_line = f'{self.request.method} {self.request.uri} {self.request_version}'
-        http_referer = '-'
-        http_useragent = '-'
-
-        if len(self.request.headers.get('Referer', '')) > 0:
-            http_referer = self.request.headers.get('Referer', '-')
-
-        if len(self.request.headers.get('User-Agent', '')) > 0:
-            http_useragent = self.request.headers.get('User-Agent', '-')
-
-        line = ''
-        override_suppress_log = False
-
-        if 'access_log_format' in self.options.keys():
-            if self.options['access_log_format'] == None:
-                self.options['access_log_format'] = 'apache2'
-
-            if self.options['access_log_format'].lower() == 'apache2':
-                # src: https://httpd.apache.org/docs/2.4/logs.html
-                # LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
-                line = f'{remote_host} {user_identity} {http_basic_auth} {request_timestamp} "{request_line}" {self.response_status} {self.response_length} "{http_referer}" "{http_useragent}"'
-
-            elif self.options['access_log_format'].lower() == 'redelk':
-                # src: https://github.com/outflanknl/RedELK/wiki/Redirector-installation#Apache%20specifics
-                # LogFormat "%t %{hostname}e apache[%P]: frontend:%{frontend_name}e/%A:%{local}p backend:%{backend_name}e client:%h:%{remote}p xforwardedfor:%{X-Forwarded-For}i headers:{%{User-Agent}i|%{Host}i|%{X-Forwarded-For}i|%{X-Forwarded-Proto}i|%{X-Host}i|%{Forwarded}i|%{Via}i|} statuscode:%s request:%r" redelklogformat
-
-                hostname = socket.gethostname()
-                pid = os.getpid()
-
-                frontend_name = 'http-redwarden'
-
-                backend_name_c2 = 'c2'
-                backend_name_decoy = 'decoy'
-
-                if 'redelk_frontend_name' in self.options.keys():
-                    frontend_name = self.options['redelk_frontend_name']
-
-                if 'redelk_backend_name_c2' in self.options.keys():
-                    backend_name_c2 = self.options['redelk_backend_name_c2']
-
-                if 'redelk_backend_name_decoy' in self.options.keys():
-                    backend_name_decoy = self.options['redelk_backend_name_decoy']
-
-                local_address = socket.gethostbyname(socket.gethostname())
-                local_port = self.request.server_port
-                x_forwarded_for = self.request.headers.get('X-Forwarded-For', '-')
-
-                # %{User-Agent}i|%{Host}i|%{X-Forwarded-For}i|%{X-Forwarded-Proto}i|%{X-Host}i|%{Forwarded}i|%{Via}i|
-                hdr_host = self.request.headers.get('Host', '-')
-                hdr_xforwardedproto = self.request.headers.get('X-Forwarded-Proto', '-')
-                hdr_xhost = self.request.headers.get('X-Host', '-')
-                hdr_forwarded = self.request.headers.get('Forwarded', '-')
-                hdr_via = self.request.headers.get('Via', '-')
-                headers_string = f"{http_useragent}|{hdr_host}|{x_forwarded_for}|{hdr_xforwardedproto}|{hdr_xhost}|{hdr_forwarded}|{hdr_via}|"
-
-                try:
-                    remote_host_port = self.request.connection.stream.socket.getpeername()[1]
-                except:
-                    remote_host_port = 0
-
-                backend_name = backend_name_decoy
-
-                if self.request.redirected_to_c2:
-                    backend_name = backend_name_c2
-
-                line = f'{request_timestamp} {hostname} apache[{pid}]: frontend:{frontend_name}/{local_address}:{local_port} backend:{backend_name} client:{remote_host}:{remote_host_port} xforwardedfor:{x_forwarded_for} headers:{{{headers_string}}} statuscode:{self.response_status} request:{request_line}'
-
-                override_suppress_log = True
-
-        if 'access_log' in self.options.keys() and self.options['access_log'] != None and len(
-                self.options['access_log']) > 0:
-            if not self.request.suppress_log_entry or override_suppress_log:
-                with open(self.options['access_log'], 'a') as f:
-                    f.write(line + '\n')
-
-        if not self.request.suppress_log_entry:
-            print(line)
+        self._format_access_log(timestamp, remote_host, request_line)
 
         event = build_request_event(
             request=self.request,
@@ -706,7 +678,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         else:
             try:
                 self.response_reason = requests.status_codes._codes[code][0]
-            except:
+            except Exception:
                 pass
 
         self.send_error(code)
@@ -719,7 +691,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         else:
             try:
                 self.response_reason = requests.status_codes._codes[code][0]
-            except:
+            except Exception:
                 pass
 
         self.set_status(code, self.response_reason)
@@ -738,9 +710,9 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self.request.is_ssl = self.is_ssl
 
         content_length = int(self.request.headers.get('Content-Length', 0))
-        if not self.options['allow_invalid']:
+        if not self.options.get('allow_invalid', False):
             if not ProxyRequestHandler.isValidRequest(self.request, self.request.body):
-                self.logger.dbg('[DROP] Invalid HTTP request from: {}'.format(self.client_address[0]))
+                self.logger.dbg('[DROP] Invalid HTTP request from: {}'.format(self.request.client_address[0]))
                 return
 
         req_body_modified = ""
@@ -804,7 +776,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             (modified, req_body_modified) = self.request_handler(self.request, self.request.body)
             newuri = self.request.uri
 
-            if modified != None and type(modified) == bool:
+            if modified != None and isinstance(modified, bool):
                 modified |= (origuri != newuri)
 
             if 'DropConnectionException' in str(type(req_body_modified)) or \
@@ -842,7 +814,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 res = Response()
 
             else:
-                self.logger.err('Exception catched in request_handler: {}'.format(str(e)))
+                self.logger.err('Exception caught in request_handler: {}'.format(str(e)))
                 if options['debug']:
                     raise
 
@@ -933,7 +905,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     # ip = socket.gethostbyname(urlparse(fetchurl).netloc)
                     ip = socket.gethostbyname(outbound_origin)
 
-                except:
+                except Exception:
                     ip = urlparse(fetchurl).netloc
                     if not ip:
                         ip = outbound_origin
@@ -974,7 +946,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     req_body = ''
                 else:
                     try:
-                        if type(self.request.body) == bytes:
+                        if isinstance(self.request.body, bytes):
                             req_body = self.request.body
                         else:
                             req_body = self.request.body.encode()
@@ -1037,7 +1009,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                     res_msg_hdrs = res.headers.copy()
 
                 res_body = primary_result.get('body', b'')
-                if type(res_body) == str:
+                if isinstance(res_body, str):
                     res_body = str.encode(res_body)
 
                 self.logger.dbg("Response from reverse-proxy fetch came at {} bytes.".format(len(res_body)))
@@ -1051,7 +1023,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
             except requests.exceptions.ConnectionError as e:
                 record_upstream_failure(self.options, observed_transport, e.__class__.__name__)
                 self.logger.err(
-                    "Exception occured while reverse-proxy fetching resource : URL({}).\nException: ({})".format(
+                    "Exception occurred while reverse-proxy fetching resource : URL({}).\nException: ({})".format(
                         fetchurl, str(e)
                     ))
 
@@ -1107,7 +1079,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         newuri = self.request.uri
         self.request.uri = origuri
 
-        if type(modified) == bool:
+        if isinstance(modified, bool):
             modified |= (newuri != origuri)
 
         if modified:
@@ -1168,7 +1140,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         if 'DropConnectionException' in str(res_body) or 'DontFetchResponseException' in str(res_body):
             res_body = ''
 
-        if type(res_body) == str: res_body = str.encode(res_body)
+        if isinstance(res_body, str): res_body = str.encode(res_body)
 
         # ProxyRequestHandler.filter_headers(res.headers, self.logger)
         res_headers = res.headers
@@ -1189,7 +1161,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         self._set_status(res.status, res.reason)
 
         for k, v in res_headers.items():
-            if k in plugins.IProxyPlugin.proxy2_metadata_headers.values(): continue
+            if k.lower() in _PROXY2_METADATA_HEADERS_LOWER: continue
 
             self.set_header(k, v)
 
@@ -1263,7 +1235,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 _io = BytesIO(data)
                 with gzip.GzipFile(fileobj=_io) as f:
                     text = f.read()
-            except:
+            except Exception:
                 return data
         elif encoding == 'deflate':
             try:
@@ -1306,10 +1278,10 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
         if res is not None:
             reshdrs = res.headers
 
-            if type(reshdrs) == dict or 'CaseInsensitiveDict' in str(type(reshdrs)):
+            if isinstance(reshdrs, dict) or 'CaseInsensitiveDict' in str(type(reshdrs)):
                 reshdrs = ''
                 for k, v in res.headers.items():
-                    if k in plugins.IProxyPlugin.proxy2_metadata_headers.values(): continue
+                    if k.lower() in _PROXY2_METADATA_HEADERS_LOWER: continue
                     if k.lower().startswith('x-proxy2-'): continue
                     reshdrs += '{}: {}\n'.format(k, v)
 
@@ -1361,7 +1333,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
 
             cookies = res.headers.get('Set-Cookie')
             if cookies:
-                if type(cookies) == list or type(cookies) == tuple:
+                if isinstance(cookies, (list, tuple)):
                     cookies = '\n'.join(cookies)
 
                 self.logger.trace("==== SET-COOKIE ====\n%s\n" % cookies, color=ProxyLogger.colors_map['yellow'])
@@ -1382,7 +1354,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 except ValueError:
                     res_body_text = res_body
             elif content_type.startswith('text/html'):
-                if type(res_body) == str: res_body = str.encode(res_body)
+                if isinstance(res_body, str): res_body = str.encode(res_body)
                 m = re.search(r'<title[^>]*>\s*([^<]+?)\s*</title>', res_body.decode(errors='ignore'), re.I)
                 if m:
                     self.logger.trace("==== HTML TITLE ====\n%s\n" % html.unescape(m.group(1)),
@@ -1395,7 +1367,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 maxchars = 4096
                 halfmax = int(maxchars / 2)
                 try:
-                    if type(res_body_text) == bytes:
+                    if isinstance(res_body_text, bytes):
                         dec = res_body_text.decode()
                     else:
                         dec = res_body_text
@@ -1496,7 +1468,7 @@ class ProxyRequestHandler(tornado.web.RequestHandler):
                 origheaders = {}
                 try:
                     origheaders = res.headers.copy()
-                except:
+                except Exception:
                     pass
 
                 previous_body = res_body_current

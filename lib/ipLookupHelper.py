@@ -224,7 +224,7 @@ class IPLookupHelper:
         reverseIp = ''
         try:
             reverseIp = socket.gethostbyaddr(output['ip'])[0]
-        except:
+        except Exception:
             pass
 
         output['reverse_ip'] = reverseIp
@@ -299,7 +299,7 @@ class IPLookupHelper:
             return r.json()
 
         except Exception as e:
-            self.logger.err(f'Exception catched while querying ip-api.com with {ipAddress}:\nName: {e}', color='cyan')
+            self.logger.err(f'Exception caught while querying ip-api.com with {ipAddress}:\nName: {e}', color='cyan')
 
         return {}
 
@@ -351,7 +351,7 @@ class IPLookupHelper:
             return r.json()
 
         except Exception as e:
-            self.logger.err(f'Exception catched while querying ipapi.co with {ipAddress}:\nName: {e}', color='cyan')
+            self.logger.err(f'Exception caught while querying ipapi.co with {ipAddress}:\nName: {e}', color='cyan')
 
         return {}
 
@@ -408,7 +408,7 @@ class IPLookupHelper:
             return r.json()
 
         except Exception as e:
-            self.logger.err(f'Exception catched while querying ipapi.co with {ipAddress}:\nName: {e}', color='cyan')
+            self.logger.err(f'Exception caught while querying ipapi.co with {ipAddress}:\nName: {e}', color='cyan')
 
         return {}
 
