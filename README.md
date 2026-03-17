@@ -6,12 +6,11 @@ Unlike the original RedWarden project, which is designed to work with specific a
 
 Several tests were made against traffic originating from different web browsers and both desktop and web applications.
 
-## Project Status (Updated: 2026-02-26)
+## Project Status (Updated: 2026-03-17)
 
-RedWardenLite is currently at **v2.0 (shipped)** with milestone work completed across behavior contracts, transport parity, runtime hardening, observability, plugin compatibility, and distributed operations contracts.
+RedWardenLite is currently at **v3.0 (shipped)** with milestone work completed across behavior contracts, transport parity, runtime hardening, observability, plugin compatibility, distributed operations contracts, and codebase refinement/optimization.
 
-- Milestone archive: [.planning/milestones/v2.0-ROADMAP.md](.planning/milestones/v2.0-ROADMAP.md)
-- Requirements archive: [.planning/milestones/v2.0-REQUIREMENTS.md](.planning/milestones/v2.0-REQUIREMENTS.md)
+- Milestone archive: [.planning/milestones/v3.0-ROADMAP.md](.planning/milestones/v3.0-ROADMAP.md)
 - Full milestone history: [.planning/MILESTONES.md](.planning/MILESTONES.md)
 
 ### Added Contracted Capabilities
@@ -21,6 +20,7 @@ RedWardenLite is currently at **v2.0 (shipped)** with milestone work completed a
 - Structured observability (JSONL request events) and Prometheus metrics at `/metrics`.
 - Plugin compatibility metadata and isolation boundaries.
 - Distributed policy coordination and fleet telemetry aggregation contracts.
+- v3.0: Bug fixes, dead code removal, refactoring, and performance optimization across the full codebase.
 
 ### Runbooks
 - [Behavior Lockdown](docs/testing-behavior-lockdown.md)
