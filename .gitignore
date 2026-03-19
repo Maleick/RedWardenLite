@@ -400,4 +400,10 @@ DotfuscatorConfig.xmle
 dll/
 .DS_Store
 .python-version
+
+# ── Tool/agent artifacts ──
+.gsd/
 .bg-shell/
+.serena/
+.codex/
+.claude/settings.local.json
